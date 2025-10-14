@@ -11,7 +11,13 @@
       
       <!-- Left Panel: Editor -->
       <div class="flex flex-col h-[70vh]">
-        <label for="mermaid-code" class="text-sm font-medium text-slate-300 mb-2">Mermaid Code Editor</label>
+        <div class="flex justify-between items-center mb-2">
+          <label for="mermaid-code" class="text-sm font-medium text-slate-300">Mermaid Code Editor</label>
+          <button (click)="openExampleModal()" class="text-xs bg-slate-700 hover:bg-slate-600 transition-colors px-3 py-1 rounded-md flex items-center gap-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            Load Example
+          </button>
+        </div>
         <textarea 
           id="mermaid-code"
           class="flex-grow bg-slate-800/50 border border-slate-700 rounded-lg p-4 font-mono text-sm text-emerald-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out resize-none"
@@ -24,17 +30,46 @@
 
       <!-- Right Panel: Output -->
       <div class="flex flex-col h-[70vh]">
-        <div class="flex justify-between items-center mb-2">
-           <h2 class="text-sm font-medium text-slate-300">Live Preview</h2>
-           @if (isLoading()) {
-              <div class="flex items-center space-x-2 text-sky-400">
-                <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <div class="flex flex-wrap gap-4 justify-between items-center mb-2">
+          <h2 class="text-sm font-medium text-slate-300">Live Preview</h2>
+       
+          <div class="flex items-center gap-4">
+            <!-- Theme Selector -->
+            <div class="flex items-center gap-2">
+              <label for="theme-select" class="text-xs text-slate-400">Theme:</label>
+              <select 
+                id="theme-select"
+                class="bg-slate-700 border border-slate-600 rounded-md text-xs py-1 px-2 text-slate-200 focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
+                (change)="onThemeChange($event)"
+                [value]="selectedTheme()">
+                @for (theme of themes; track theme) {
+                  <option [value]="theme">{{ theme.charAt(0).toUpperCase() + theme.slice(1) }}</option>
+                }
+              </select>
+            </div>
+       
+            <!-- Download Buttons -->
+            <div class="flex items-center gap-2">
+              <button (click)="downloadSVG()" [disabled]="!mermaidCode().trim() || !!errorMessage()" class="disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 text-xs bg-slate-700 hover:bg-slate-600 transition-colors px-3 py-1 rounded-md">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                SVG
+              </button>
+              <button (click)="downloadPNG()" [disabled]="!mermaidCode().trim() || !!errorMessage()" class="disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 text-xs bg-slate-700 hover:bg-slate-600 transition-colors px-3 py-1 rounded-md">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                PNG
+              </button>
+            </div>
+       
+            @if (isLoading()) {
+              <div class="flex items-center space-x-2 text-sky-400 text-xs">
+                <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
                 <span>Rendering...</span>
               </div>
-           }
+            }
+          </div>
         </div>
         
         @if (errorMessage()) {
@@ -53,6 +88,29 @@
     <footer class="text-center mt-8 text-slate-500 text-sm">
       <p>Powered by Angular & Mermaid.js | Read the <a href="https://mermaid.js.org/intro/" target="_blank" rel="noopener noreferrer" class="text-sky-500 hover:underline">Mermaid Documentation</a></p>
     </footer>
-
   </div>
+
+  @if (isExampleModalOpen()) {
+    <div class="fixed inset-0 bg-black/60 z-40 animate-fade-in" (click)="closeExampleModal()"></div>
+    <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl z-50 w-full max-w-3xl max-h-[80vh] flex flex-col animate-slide-up">
+      <!-- Modal Header -->
+      <div class="flex justify-between items-center p-4 border-b border-slate-700 flex-shrink-0">
+        <h3 class="text-lg font-semibold text-slate-100">Load a Chart Example</h3>
+        <button (click)="closeExampleModal()" class="text-slate-400 hover:text-white transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <!-- Modal Body -->
+      <div class="p-6 overflow-y-auto">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          @for (example of chartExamples; track example.name) {
+            <button (click)="loadExample(example.code)" class="text-left p-4 bg-slate-700/50 hover:bg-sky-900/40 border border-slate-700 hover:border-sky-600 rounded-lg transition-all duration-200 transform hover:-translate-y-1">
+              <h4 class="font-semibold text-sky-400">{{ example.name }}</h4>
+              <p class="text-xs text-slate-400 mt-1">Click to load this example.</p>
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  }
 </main>

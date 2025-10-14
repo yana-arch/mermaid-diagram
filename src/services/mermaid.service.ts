@@ -6,19 +6,17 @@ declare const mermaid: any;
   providedIn: 'root',
 })
 export class MermaidService {
-  constructor() {
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: 'neutral',
-      fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
-      logLevel: isDevMode() ? 'debug' : 'fatal',
-    });
-  }
-
-  public async render(code: string): Promise<string> {
+  public async render(code: string, theme: string): Promise<string> {
     if (!code?.trim()) {
       return Promise.resolve('');
     }
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme,
+      fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+      logLevel: isDevMode() ? 'debug' : 'fatal',
+    });
 
     try {
       // Use a unique ID for the graph to prevent caching issues
