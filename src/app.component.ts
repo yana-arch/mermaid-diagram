@@ -2,6 +2,8 @@ import { Component, ChangeDetectionStrategy, signal, effect, viewChild, ElementR
 import { isPlatformBrowser } from '@angular/common';
 import { MermaidService } from './services/mermaid.service';
 
+declare const Prism: any;
+
 const CHART_EXAMPLES = [
   {
     name: 'Flowchart',
@@ -83,6 +85,19 @@ const CHART_EXAMPLES = [
     section Go home
       Go home: 5: Me
       Sit down: 5: Me`
+  },
+  {
+    name: 'Git Graph',
+    code: `gitGraph
+   commit id: "abc1"
+   commit id: "def2"
+   branch develop
+   checkout develop
+   commit id: "ghi3"
+   commit id: "jkl4"
+   checkout main
+   merge develop
+   commit id: "mno5"`
   }
 ];
 
@@ -100,6 +115,9 @@ export class AppComponent {
   private readonly platformId = inject(PLATFORM_ID);
 
   chartOutput = viewChild.required<ElementRef<HTMLDivElement>>('chartOutput');
+  codeEditor = viewChild.required<ElementRef<HTMLElement>>('codeEditor');
+  codeContainer = viewChild.required<ElementRef<HTMLPreElement>>('codeContainer');
+
 
   readonly themes = ['neutral', 'dark', 'forest', 'default'] as const;
   selectedTheme = signal<(typeof this.themes)[number]>('neutral');
@@ -131,10 +149,19 @@ export class AppComponent {
       const code = this.mermaidCode();
       const theme = this.selectedTheme();
       const outputElement = this.chartOutput()?.nativeElement;
+      const editorElement = this.codeEditor()?.nativeElement;
 
       if (isPlatformBrowser(this.platformId)) {
         localStorage.setItem('mermaidCode', code);
         localStorage.setItem('mermaidTheme', theme);
+
+        // Syntax highlighting logic
+        if (editorElement) {
+           editorElement.textContent = code;
+           if (typeof Prism !== 'undefined' && Prism.highlightElement) {
+              Prism.highlightElement(editorElement);
+           }
+        }
       }
       
       if (outputElement && isPlatformBrowser(this.platformId)) {
@@ -167,6 +194,15 @@ export class AppComponent {
   onCodeChange(event: Event): void {
     const newCode = (event.target as HTMLTextAreaElement).value;
     this.mermaidCode.set(newCode);
+  }
+
+  onEditorScroll(event: Event): void {
+    const textarea = event.target as HTMLTextAreaElement;
+    const preElement = this.codeContainer()?.nativeElement;
+    if (preElement) {
+      preElement.scrollTop = textarea.scrollTop;
+      preElement.scrollLeft = textarea.scrollLeft;
+    }
   }
   
   onThemeChange(event: Event): void {

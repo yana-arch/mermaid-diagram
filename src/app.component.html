@@ -18,14 +18,19 @@
             Load Example
           </button>
         </div>
-        <textarea 
-          id="mermaid-code"
-          class="flex-grow bg-slate-800/50 border border-slate-700 rounded-lg p-4 font-mono text-sm text-emerald-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out resize-none"
-          [value]="mermaidCode()"
-          (input)="onCodeChange($event)"
-          placeholder="Enter your Mermaid syntax here..."
-          spellcheck="false"
-        ></textarea>
+        <div class="editor-container relative flex-grow w-full h-full bg-slate-800/50 border border-slate-700 rounded-lg">
+          <textarea 
+            #codeTextarea
+            id="mermaid-code"
+            class="absolute inset-0 w-full h-full m-0 bg-transparent rounded-lg p-4 font-mono text-sm text-transparent caret-emerald-300 focus:ring-2 focus:ring-sky-500 focus:outline-none transition duration-150 ease-in-out resize-none z-10"
+            [value]="mermaidCode()"
+            (input)="onCodeChange($event)"
+            (scroll)="onEditorScroll($event)"
+            placeholder="Enter your Mermaid syntax here..."
+            spellcheck="false"
+          ></textarea>
+          <pre #codeContainer class="absolute inset-0 w-full h-full m-0 p-4 font-mono text-sm text-emerald-300 rounded-lg overflow-auto pointer-events-none z-0"><code #codeEditor class="language-mermaid"></code></pre>
+        </div>
       </div>
 
       <!-- Right Panel: Output -->

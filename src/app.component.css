@@ -3,3 +3,25 @@
   max-width: 100%;
   height: auto;
 }
+
+/*
+ * Syntax Highlighting Editor Styles
+ * We overlay a transparent textarea on top of a <pre> block that contains the
+ * highlighted code. These styles ensure they are perfectly aligned.
+ */
+.editor-container pre[class*="language-"] {
+  /* Override Prism's default background to use our Tailwind CSS background on the container */
+  background: none !important;
+  margin: 0;
+}
+
+.editor-container textarea {
+  /* Match line height and font with Prism's styling for perfect alignment */
+  line-height: 1.5;
+  font-family: "Fira Code", monospace;
+}
+
+.editor-container pre[class*="language-"] code {
+  line-height: 1.5;
+  font-family: "Fira Code", monospace;
+}
