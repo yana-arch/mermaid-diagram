@@ -1,0 +1,5 @@
+{
+  "name": "Mermaid Chart Generator",
+  "description": "A simple and beautiful application to write Mermaid syntax and instantly render it into diagrams and charts. Perfect for visualizing workflows, sequences, and system designs.",
+  "requestFramePermissions": []
+}

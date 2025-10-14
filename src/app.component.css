@@ -1,0 +1,5 @@
+/* Ensures the generated SVG scales correctly within its container */
+:host ::ng-deep .mermaid svg {
+  max-width: 100%;
+  height: auto;
+}

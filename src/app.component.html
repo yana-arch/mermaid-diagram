@@ -1,0 +1,58 @@
+<main class="min-h-screen bg-slate-900 text-slate-200 font-sans p-4 sm:p-6 lg:p-8">
+  <div class="max-w-screen-2xl mx-auto">
+    <header class="text-center mb-8">
+      <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-emerald-500">
+        Mermaid Chart Generator
+      </h1>
+      <p class="mt-2 text-lg text-slate-400">Instantly visualize your Mermaid diagrams with a live-updating editor.</p>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+      
+      <!-- Left Panel: Editor -->
+      <div class="flex flex-col h-[70vh]">
+        <label for="mermaid-code" class="text-sm font-medium text-slate-300 mb-2">Mermaid Code Editor</label>
+        <textarea 
+          id="mermaid-code"
+          class="flex-grow bg-slate-800/50 border border-slate-700 rounded-lg p-4 font-mono text-sm text-emerald-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition duration-150 ease-in-out resize-none"
+          [value]="mermaidCode()"
+          (input)="onCodeChange($event)"
+          placeholder="Enter your Mermaid syntax here..."
+          spellcheck="false"
+        ></textarea>
+      </div>
+
+      <!-- Right Panel: Output -->
+      <div class="flex flex-col h-[70vh]">
+        <div class="flex justify-between items-center mb-2">
+           <h2 class="text-sm font-medium text-slate-300">Live Preview</h2>
+           @if (isLoading()) {
+              <div class="flex items-center space-x-2 text-sky-400">
+                <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Rendering...</span>
+              </div>
+           }
+        </div>
+        
+        @if (errorMessage()) {
+          <div class="bg-red-900/50 border border-red-700 text-red-300 p-3 rounded-lg mb-4 text-xs" role="alert">
+            <p class="font-bold mb-1">Syntax Error</p>
+            <pre class="whitespace-pre-wrap font-mono">{{ errorMessage() }}</pre>
+          </div>
+        }
+        
+        <div #chartOutput class="flex-grow bg-white border border-slate-700 rounded-lg p-6 flex items-center justify-center overflow-auto">
+          <!-- Chart is rendered here -->
+        </div>
+      </div>
+    </div>
+
+    <footer class="text-center mt-8 text-slate-500 text-sm">
+      <p>Powered by Angular & Mermaid.js | Read the <a href="https://mermaid.js.org/intro/" target="_blank" rel="noopener noreferrer" class="text-sky-500 hover:underline">Mermaid Documentation</a></p>
+    </footer>
+
+  </div>
+</main>
