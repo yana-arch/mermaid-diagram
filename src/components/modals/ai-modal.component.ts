@@ -281,9 +281,11 @@ export class AiModalComponent {
 
         const code = await this.geminiService.generateMermaidCode(inputData, {
           apiKey: aiConfig.apiKey,
+          useCustomUrl: aiConfig.useCustomUrl,
           baseUrl: useBaseUrl ? aiConfig.customUrl.trim() : undefined,
           model: aiConfig.model,
-          thinkingBudget: aiConfig.thinkingBudget
+          thinkingBudget: aiConfig.thinkingBudget,
+          apiVersion: aiConfig.apiVersion
         });
 
         this.codeGenerated.emit(code);

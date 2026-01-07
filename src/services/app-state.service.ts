@@ -13,6 +13,7 @@ export interface AiConfig {
   customUrl: string;
   model: string;
   thinkingBudget: number; // 0 = disabled
+  apiVersion: string;
 }
 
 const INITIAL_CODE = `graph TD
@@ -28,7 +29,8 @@ const DEFAULT_AI_CONFIG: AiConfig = {
   useCustomUrl: false,
   customUrl: '',
   model: 'gemini-2.5-flash',
-  thinkingBudget: 0 // Default to disabled for speed
+  thinkingBudget: 0, // Default to disabled for speed
+  apiVersion: 'v1beta'
 };
 
 @Injectable({
@@ -81,9 +83,25 @@ export class AppStateService {
         }
       } else {
         // Try to check if env var is available (in some build setups)
-        const envKey = process.env['API_KEY'];
-        if (envKey) {
-          this.aiConfig.update(c => ({ ...c, apiKey: envKey }));
+        // Check if process is defined (Node.js/Build time) before accessing it
+        try {
+          if (typeof process !== 'undefined' && process.env) {
+            const envKey = process.env['API_KEY'];
+            const envUrl = process.env['CUSTOM_URL'];
+            const envModel = process.env['AI_MODEL'];
+            const envApiVersion = process.env['AI_API_VERSION'];
+            
+            this.aiConfig.update(c => ({ 
+                ...c, 
+                apiKey: envKey || c.apiKey,
+                customUrl: envUrl || c.customUrl,
+                useCustomUrl: !!envUrl || c.useCustomUrl,
+                model: envModel || c.model,
+                apiVersion: envApiVersion || c.apiVersion
+            }));
+          }
+        } catch (e) {
+          // Ignore ReferenceError if process is not defined
         }
       }
 
