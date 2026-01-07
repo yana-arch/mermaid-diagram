@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Mermaid Diagram</string>
+    <string name="title_activity_main">Mermaid Diagram</string>
+    <string name="package_name">com.mermaid.diagram</string>
+    <string name="custom_url_scheme">com.mermaid.diagram</string>
+</resources>
