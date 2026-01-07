@@ -2,6 +2,7 @@
 import { Component, ChangeDetectionStrategy, signal, effect, viewChild, ElementRef, inject, PLATFORM_ID, ViewEncapsulation } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { MermaidService } from './services/mermaid.service';
+import { GeminiService } from './services/gemini.service';
 
 declare const Prism: any;
 
@@ -211,12 +212,14 @@ export type ExportFormat = 'svg' | 'png' | 'jpeg' | 'webp';
 })
 export class AppComponent {
   private readonly mermaidService = inject(MermaidService);
+  private readonly geminiService = inject(GeminiService);
   private readonly platformId = inject(PLATFORM_ID);
 
   // chartOutput is now the container div that has the innerHTML
   chartOutput = viewChild.required<ElementRef<HTMLDivElement>>('chartOutput');
   codeEditor = viewChild.required<ElementRef<HTMLElement>>('codeEditor');
   codeContainer = viewChild.required<ElementRef<HTMLPreElement>>('codeContainer');
+  aiPromptInput = viewChild<ElementRef<HTMLTextAreaElement>>('aiPromptInput');
 
   readonly themes = ['neutral', 'dark', 'forest', 'default'] as const;
   selectedTheme = signal<(typeof this.themes)[number]>('neutral');
@@ -226,12 +229,15 @@ export class AppComponent {
   // Modal States
   isExampleModalOpen = signal<boolean>(false);
   isExportModalOpen = signal<boolean>(false);
+  isAiModalOpen = signal<boolean>(false);
 
   initialCode = CHART_EXAMPLES[0].code;
 
   mermaidCode = signal<string>(this.initialCode);
   errorMessage = signal<string | null>(null);
   isLoading = signal<boolean>(false);
+  isAiLoading = signal<boolean>(false);
+  aiError = signal<string | null>(null);
 
   // Pan & Zoom State
   zoomScale = signal<number>(1);
@@ -462,6 +468,7 @@ export class AppComponent {
     URL.revokeObjectURL(url);
   }
   
+  // --- Example Modal Logic ---
   openExampleModal(): void {
     this.isExampleModalOpen.set(true);
   }
@@ -474,6 +481,41 @@ export class AppComponent {
     this.mermaidCode.set(code);
     this.closeExampleModal();
     this.resetZoom();
+  }
+
+  // --- AI Logic ---
+  openAiModal(): void {
+    this.isAiModalOpen.set(true);
+    this.aiError.set(null);
+    // Focus happens automatically via autofocus attribute or could be done here with effect
+  }
+
+  closeAiModal(): void {
+    if (!this.isAiLoading()) {
+      this.isAiModalOpen.set(false);
+      this.aiError.set(null);
+    }
+  }
+
+  async generateWithAI(): Promise<void> {
+    const inputEl = this.aiPromptInput()?.nativeElement;
+    const prompt = inputEl?.value;
+
+    if (!prompt || !prompt.trim()) return;
+
+    this.isAiLoading.set(true);
+    this.aiError.set(null);
+
+    try {
+      const generatedCode = await this.geminiService.generateMermaidCode(prompt);
+      this.mermaidCode.set(generatedCode);
+      this.isAiLoading.set(false);
+      this.closeAiModal();
+      this.resetZoom();
+    } catch (err) {
+      this.isAiLoading.set(false);
+      this.aiError.set('Failed to generate chart. Please try again or check your API Key.');
+    }
   }
 
   private parseMermaidError(error: any): string {

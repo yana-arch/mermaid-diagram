@@ -14,10 +14,19 @@
       <div class="flex flex-col h-[70vh]">
         <div class="flex justify-between items-center mb-2">
           <label for="mermaid-code" class="text-sm font-medium text-slate-300">Mermaid Code Editor</label>
-          <button (click)="openExampleModal()" class="text-xs bg-slate-700 hover:bg-slate-600 transition-colors px-3 py-1 rounded-md flex items-center gap-1.5">
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-            Load Example
-          </button>
+          
+          <div class="flex gap-2">
+            <!-- AI Button -->
+            <button (click)="openAiModal()" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white transition-colors px-3 py-1 rounded-md flex items-center gap-1.5 shadow-lg shadow-indigo-900/20 border border-indigo-500/50">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+              AI Generate
+            </button>
+
+            <button (click)="openExampleModal()" class="text-xs bg-slate-700 hover:bg-slate-600 transition-colors px-3 py-1 rounded-md flex items-center gap-1.5">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+              Load Example
+            </button>
+          </div>
         </div>
         <div class="editor-container relative flex-grow w-full h-full bg-slate-800/50 border border-slate-700 rounded-lg overflow-hidden">
           <!-- Textarea (Input Layer) -->
@@ -128,6 +137,65 @@
       <p>Powered by Angular & Mermaid.js | Read the <a href="https://mermaid.js.org/intro/" target="_blank" rel="noopener noreferrer" class="text-sky-500 hover:underline">Mermaid Documentation</a></p>
     </footer>
   </div>
+
+  <!-- AI Generation Modal -->
+  @if (isAiModalOpen()) {
+    <div class="fixed inset-0 bg-black/70 z-50 animate-fade-in backdrop-blur-sm" (click)="closeAiModal()"></div>
+    <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 border border-indigo-500/50 rounded-2xl shadow-2xl z-50 w-full max-w-lg flex flex-col animate-scale-in">
+      
+      <!-- Header -->
+      <div class="flex justify-between items-center p-5 border-b border-slate-700">
+        <div class="flex items-center gap-2">
+           <svg class="text-indigo-400" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+           <h3 class="text-xl font-bold text-white">Generate with AI</h3>
+        </div>
+        <button (click)="closeAiModal()" [disabled]="isAiLoading()" class="text-slate-400 hover:text-white transition-colors p-1 rounded hover:bg-slate-700 disabled:opacity-50">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="p-6">
+        <label for="ai-prompt" class="block text-sm font-medium text-slate-300 mb-2">Describe your diagram:</label>
+        <textarea 
+          #aiPromptInput
+          id="ai-prompt"
+          class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all resize-none"
+          rows="4"
+          placeholder="e.g. Create a sequence diagram for a user login flow using JWT tokens..."
+          [disabled]="isAiLoading()"
+          autofocus
+        ></textarea>
+        
+        @if (aiError()) {
+          <p class="mt-3 text-xs text-red-400 flex items-center gap-1">
+             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+             {{ aiError() }}
+          </p>
+        }
+      </div>
+
+      <!-- Footer -->
+      <div class="p-5 border-t border-slate-700 bg-slate-800/50 rounded-b-2xl flex justify-end gap-3">
+        <button (click)="closeAiModal()" [disabled]="isAiLoading()" class="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors disabled:opacity-50">Cancel</button>
+        <button 
+          (click)="generateWithAI()"
+          [disabled]="isAiLoading()"
+          class="bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/50 text-white font-bold py-2 px-6 rounded-lg shadow-md flex items-center gap-2 transition-all"
+        >
+          @if (isAiLoading()) {
+             <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+             </svg>
+             Thinking...
+          } @else {
+             <span>Generate</span>
+          }
+        </button>
+      </div>
+    </div>
+  }
 
   <!-- Example Modal -->
   @if (isExampleModalOpen()) {
