@@ -67,9 +67,12 @@ export class GeminiService {
         });
       }
 
+      // Fix: contents must be an array of Content objects [{ parts: ... }]
+      // The error "n[Symbol.iterator] is not a function" occurs because the SDK tries to iterate over 'contents'.
+      // We pass an array containing one Content object.
       const response = await this.ai.models.generateContent({
         model: model,
-        contents: { parts },
+        contents: [{ parts }],
         config: {
           systemInstruction: systemInstruction,
           temperature: 0.2,

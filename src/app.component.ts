@@ -7,6 +7,7 @@ import { AppToolbarComponent } from './components/app-toolbar.component';
 import { AiModalComponent } from './components/modals/ai-modal.component';
 import { ExampleModalComponent } from './components/modals/example-modal.component';
 import { ExportModalComponent, ExportFormat } from './components/modals/export-modal.component';
+import { CHART_EXAMPLES } from './data/chart-examples';
 
 @Component({
   selector: 'app-root',
@@ -27,17 +28,8 @@ export class AppComponent {
   store = inject(AppStateService);
   previewComponent = viewChild(ChartPreviewComponent);
 
-  // Keep static data here or move to a config file
-  readonly chartExamples = [
-    { name: 'Flowchart', code: `graph TD\n A[Start] --> B{Is it?};\n B -- Yes --> C[OK];\n C --> D[Done];` },
-    { name: 'Sequence', code: `sequenceDiagram\n Alice->>John: Hello John, how are you?\n John-->>Alice: Great!` },
-    { name: 'Class', code: `classDiagram\n Animal <|-- Duck\n class Duck{ +swim() }` },
-    { name: 'Gantt', code: `gantt\n title A Gantt Diagram\n section Section\n A task :a1, 2024-01-01, 30d` },
-    { name: 'Pie', code: `pie\n title Pets\n "Dogs" : 386\n "Cats" : 85` },
-    { name: 'User Journey', code: `journey\n title My working day\n section Go to work\n Make tea: 5: Me` },
-    { name: 'Mindmap', code: `mindmap\n  root((Mindmap))\n    Origins\n      Long history` },
-    { name: 'Timeline', code: `timeline\n    title History of Social Media Platform\n    2002 : LinkedIn` }
-  ];
+  // Import from data file
+  readonly chartExamples = CHART_EXAMPLES;
 
   handleAiCode(code: string) {
     this.store.setCode(code);
