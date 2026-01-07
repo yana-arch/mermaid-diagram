@@ -48,6 +48,10 @@ import { MermaidService } from '../services/mermaid.service';
           (mousemove)="onMouseMove($event)"
           (mouseup)="onMouseUp()"
           (mouseleave)="onMouseLeave()"
+          (touchstart)="onTouchStart($event)"
+          (touchmove)="onTouchMove($event)"
+          (touchend)="onTouchEnd()"
+          (touchcancel)="onTouchEnd()"
         >
             <div 
               #chartOutput 
@@ -148,6 +152,30 @@ export class ChartPreviewComponent {
   }
   onMouseUp() { this.isPanning.set(false); }
   onMouseLeave() { this.isPanning.set(false); }
+
+  // Touch Support
+  onTouchStart(e: TouchEvent) {
+    if (e.touches.length === 1) {
+      // Single touch - Pan
+      this.isPanning.set(true);
+      this.dragStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      this.initialPan = { ...this.panOffset() };
+    }
+  }
+
+  onTouchMove(e: TouchEvent) {
+    if (this.isPanning() && e.touches.length === 1) {
+      e.preventDefault(); // Prevent scrolling
+      this.panOffset.set({
+        x: this.initialPan.x + (e.touches[0].clientX - this.dragStart.x),
+        y: this.initialPan.y + (e.touches[0].clientY - this.dragStart.y)
+      });
+    }
+  }
+
+  onTouchEnd() {
+    this.isPanning.set(false);
+  }
 
   private parseMermaidError(error: any): string {
     if (typeof error === 'string') return error;
