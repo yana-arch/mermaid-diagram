@@ -19,18 +19,21 @@
             Load Example
           </button>
         </div>
-        <div class="editor-container relative flex-grow w-full h-full bg-slate-800/50 border border-slate-700 rounded-lg">
+        <div class="editor-container relative flex-grow w-full h-full bg-slate-800/50 border border-slate-700 rounded-lg overflow-hidden">
+          <!-- Textarea (Input Layer) -->
           <textarea 
             #codeTextarea
             id="mermaid-code"
-            class="absolute inset-0 w-full h-full m-0 bg-transparent rounded-lg p-4 font-mono text-sm text-transparent caret-emerald-300 focus:ring-2 focus:ring-sky-500 focus:outline-none transition duration-150 ease-in-out resize-none z-10"
+            class="editor-layer editor-textarea absolute inset-0 w-full h-full focus:outline-none"
             [value]="mermaidCode()"
             (input)="onCodeChange($event)"
             (scroll)="onEditorScroll($event)"
             placeholder="Enter your Mermaid syntax here..."
             spellcheck="false"
           ></textarea>
-          <pre #codeContainer class="absolute inset-0 w-full h-full m-0 p-4 font-mono text-sm text-emerald-300 rounded-lg overflow-auto pointer-events-none z-0"><code #codeEditor class="language-mermaid"></code></pre>
+          
+          <!-- Syntax Highlighter (Background Layer) -->
+          <pre #codeContainer class="editor-layer editor-pre absolute inset-0 w-full h-full"><code #codeEditor class="language-mermaid"></code></pre>
         </div>
       </div>
 
@@ -54,17 +57,15 @@
               </select>
             </div>
        
-            <!-- Download Buttons -->
-            <div class="flex items-center gap-2">
-              <button (click)="downloadSVG()" [disabled]="!mermaidCode().trim() || !!errorMessage()" class="disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 text-xs bg-slate-700 hover:bg-slate-600 transition-colors px-3 py-1 rounded-md">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                SVG
-              </button>
-              <button (click)="downloadPNG()" [disabled]="!mermaidCode().trim() || !!errorMessage()" class="disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 text-xs bg-slate-700 hover:bg-slate-600 transition-colors px-3 py-1 rounded-md">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-                PNG
-              </button>
-            </div>
+            <!-- Export Modal Trigger -->
+            <button 
+              (click)="openExportModal()"
+              [disabled]="!mermaidCode().trim() || !!errorMessage()"
+              class="disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-3 py-1 rounded-md transition-colors shadow-lg shadow-emerald-900/20"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+              Export Image
+            </button>
        
             @if (isLoading()) {
               <div class="flex items-center space-x-2 text-sky-400 text-xs">
@@ -128,17 +129,16 @@
     </footer>
   </div>
 
+  <!-- Example Modal -->
   @if (isExampleModalOpen()) {
     <div class="fixed inset-0 bg-black/60 z-40 animate-fade-in" (click)="closeExampleModal()"></div>
     <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl z-50 w-full max-w-3xl max-h-[80vh] flex flex-col animate-slide-up">
-      <!-- Modal Header -->
       <div class="flex justify-between items-center p-4 border-b border-slate-700 flex-shrink-0">
         <h3 class="text-lg font-semibold text-slate-100">Load a Chart Example</h3>
         <button (click)="closeExampleModal()" class="text-slate-400 hover:text-white transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
-      <!-- Modal Body -->
       <div class="p-6 overflow-y-auto">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           @for (example of chartExamples; track example.name) {
@@ -149,6 +149,136 @@
           }
         </div>
       </div>
+    </div>
+  }
+
+  <!-- Export Modal -->
+  @if (isExportModalOpen()) {
+    <div class="fixed inset-0 bg-black/70 z-50 animate-fade-in backdrop-blur-sm" (click)="closeExportModal()"></div>
+    <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 border border-slate-600 rounded-2xl shadow-2xl z-50 w-full max-w-md flex flex-col animate-scale-in">
+      
+      <!-- Header -->
+      <div class="flex justify-between items-center p-5 border-b border-slate-700">
+        <h3 class="text-xl font-bold text-white">Export Diagram</h3>
+        <button (click)="closeExportModal()" class="text-slate-400 hover:text-white transition-colors p-1 rounded hover:bg-slate-700">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="p-6 flex-col gap-6">
+        
+        <!-- Format Selection -->
+        <div class="mb-6">
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Format</label>
+          <div class="grid grid-cols-2 gap-3">
+            <button 
+              (click)="setExportFormat('png')" 
+              class="flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all duration-200"
+              [class.border-blue-500]="selectedExportFormat() === 'png'"
+              [class.bg-blue-500/10]="selectedExportFormat() === 'png'"
+              [class.border-slate-700]="selectedExportFormat() !== 'png'"
+              [class.bg-slate-700/30]="selectedExportFormat() !== 'png'"
+              [class.hover:border-slate-500]="selectedExportFormat() !== 'png'"
+            >
+              <span class="text-lg font-bold text-blue-400 mb-1">PNG</span>
+              <span class="text-[10px] text-slate-400">Best for Web</span>
+            </button>
+
+            <button 
+              (click)="setExportFormat('jpeg')" 
+              class="flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all duration-200"
+              [class.border-orange-500]="selectedExportFormat() === 'jpeg'"
+              [class.bg-orange-500/10]="selectedExportFormat() === 'jpeg'"
+              [class.border-slate-700]="selectedExportFormat() !== 'jpeg'"
+              [class.bg-slate-700/30]="selectedExportFormat() !== 'jpeg'"
+              [class.hover:border-slate-500]="selectedExportFormat() !== 'jpeg'"
+            >
+              <span class="text-lg font-bold text-orange-400 mb-1">JPG</span>
+              <span class="text-[10px] text-slate-400">Small File</span>
+            </button>
+
+            <button 
+              (click)="setExportFormat('webp')" 
+              class="flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all duration-200"
+              [class.border-purple-500]="selectedExportFormat() === 'webp'"
+              [class.bg-purple-500/10]="selectedExportFormat() === 'webp'"
+              [class.border-slate-700]="selectedExportFormat() !== 'webp'"
+              [class.bg-slate-700/30]="selectedExportFormat() !== 'webp'"
+              [class.hover:border-slate-500]="selectedExportFormat() !== 'webp'"
+            >
+              <span class="text-lg font-bold text-purple-400 mb-1">WebP</span>
+              <span class="text-[10px] text-slate-400">Modern</span>
+            </button>
+
+            <button 
+              (click)="setExportFormat('svg')" 
+              class="flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all duration-200"
+              [class.border-emerald-500]="selectedExportFormat() === 'svg'"
+              [class.bg-emerald-500/10]="selectedExportFormat() === 'svg'"
+              [class.border-slate-700]="selectedExportFormat() !== 'svg'"
+              [class.bg-slate-700/30]="selectedExportFormat() !== 'svg'"
+              [class.hover:border-slate-500]="selectedExportFormat() !== 'svg'"
+            >
+              <span class="text-lg font-bold text-emerald-400 mb-1">SVG</span>
+              <span class="text-[10px] text-slate-400">Vector</span>
+            </button>
+          </div>
+          
+          <!-- Contextual Help Text -->
+          <div class="mt-2 text-xs text-slate-500 h-4">
+            @switch (selectedExportFormat()) {
+              @case ('png') { Supports transparency. High quality. }
+              @case ('jpeg') { No transparency (white background). Smaller size. }
+              @case ('webp') { Efficient compression with transparency. }
+              @case ('svg') { Infinite scalability. Editable in Illustrator/Inkscape. }
+            }
+          </div>
+        </div>
+
+        <!-- Scaling Options (Raster Only) -->
+        <div class="mb-2 transition-opacity duration-200" [class.opacity-50]="selectedExportFormat() === 'svg'" [class.pointer-events-none]="selectedExportFormat() === 'svg'">
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Resolution Scale</label>
+          <div class="flex bg-slate-900/50 p-1.5 rounded-lg border border-slate-700">
+            <button 
+              (click)="setExportScale(1)"
+              class="flex-1 py-2 text-xs font-medium rounded-md transition-all"
+              [class.bg-slate-700]="exportScale() === 1"
+              [class.text-white]="exportScale() === 1"
+              [class.text-slate-400]="exportScale() !== 1"
+              [class.shadow-sm]="exportScale() === 1"
+            >1x</button>
+            <button 
+              (click)="setExportScale(2)"
+              class="flex-1 py-2 text-xs font-medium rounded-md transition-all"
+              [class.bg-slate-700]="exportScale() === 2"
+              [class.text-white]="exportScale() === 2"
+              [class.text-slate-400]="exportScale() !== 2"
+              [class.shadow-sm]="exportScale() === 2"
+            >2x</button>
+            <button 
+              (click)="setExportScale(4)"
+              class="flex-1 py-2 text-xs font-medium rounded-md transition-all"
+              [class.bg-slate-700]="exportScale() === 4"
+              [class.text-white]="exportScale() === 4"
+              [class.text-slate-400]="exportScale() !== 4"
+              [class.shadow-sm]="exportScale() === 4"
+            >4x</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Action -->
+      <div class="p-5 border-t border-slate-700 bg-slate-800/50 rounded-b-2xl">
+        <button 
+          (click)="confirmExport()"
+          class="w-full bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold py-3 px-4 rounded-lg shadow-lg transform transition active:scale-[0.98] flex justify-center items-center gap-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+          Download {{ selectedExportFormat().toUpperCase() }}
+        </button>
+      </div>
+
     </div>
   }
 </main>

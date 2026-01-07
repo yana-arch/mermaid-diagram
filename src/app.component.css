@@ -11,21 +11,49 @@
  * We overlay a transparent textarea on top of a <pre> block that contains the
  * highlighted code. These styles ensure they are perfectly aligned.
  */
-.editor-container pre[class*="language-"] {
-  /* Override Prism's default background to use our Tailwind CSS background on the container */
-  background: none !important;
-  margin: 0;
+
+.editor-container {
+  container-type: inline-size;
 }
 
-.editor-container textarea {
-  /* Match line height and font with Prism's styling for perfect alignment */
-  line-height: 1.5;
-  font-family: "Fira Code", monospace;
+/* Base styles shared by both layers to ensure alignment */
+.editor-layer {
+  font-family: "Fira Code", monospace !important;
+  font-size: 0.875rem !important; /* text-sm */
+  line-height: 1.5rem !important; /* leading-6 */
+  padding: 1rem !important; /* p-4 */
+  margin: 0 !important;
+  border: 0 !important;
+  white-space: pre !important; /* Disable wrapping to prevent alignment skew */
+  overflow: auto !important; /* Allow scrolling */
+  box-sizing: border-box !important;
 }
 
-.editor-container pre[class*="language-"] code {
-  line-height: 1.5;
-  font-family: "Fira Code", monospace;
+/* Top Layer: The Textarea (Interactive, Transparent text) */
+.editor-textarea {
+  color: transparent !important;
+  background: transparent !important;
+  caret-color: #34d399; /* emerald-400 - Visible cursor */
+  resize: none;
+  z-index: 10;
+}
+
+/* Bottom Layer: The Pre/Code (Visual, Syntax Highlighted) */
+.editor-pre {
+  z-index: 0;
+  pointer-events: none; /* Let clicks pass through to textarea */
+  /* Override Prism's default theme styles */
+  background: transparent !important;
+  text-shadow: none !important;
+}
+
+/* Ensure the code tag inside pre also respects the font settings */
+.editor-pre code {
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  padding: 0 !important;
+  white-space: pre !important;
 }
 
 /* Panning Cursors */
