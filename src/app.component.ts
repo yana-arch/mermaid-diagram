@@ -1,3 +1,4 @@
+
 import { Component, ChangeDetectionStrategy, signal, effect, viewChild, ElementRef, inject, PLATFORM_ID, ViewEncapsulation } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { MermaidService } from './services/mermaid.service';
@@ -114,10 +115,10 @@ export class AppComponent {
   private readonly mermaidService = inject(MermaidService);
   private readonly platformId = inject(PLATFORM_ID);
 
+  // chartOutput is now the container div that has the innerHTML
   chartOutput = viewChild.required<ElementRef<HTMLDivElement>>('chartOutput');
   codeEditor = viewChild.required<ElementRef<HTMLElement>>('codeEditor');
   codeContainer = viewChild.required<ElementRef<HTMLPreElement>>('codeContainer');
-
 
   readonly themes = ['neutral', 'dark', 'forest', 'default'] as const;
   selectedTheme = signal<(typeof this.themes)[number]>('neutral');
@@ -130,6 +131,13 @@ export class AppComponent {
   mermaidCode = signal<string>(this.initialCode);
   errorMessage = signal<string | null>(null);
   isLoading = signal<boolean>(false);
+
+  // Pan & Zoom State
+  zoomScale = signal<number>(1);
+  panOffset = signal<{ x: number; y: number }>({ x: 0, y: 0 });
+  isPanning = signal<boolean>(false);
+  private dragStart = { x: 0, y: 0 };
+  private initialPan = { x: 0, y: 0 };
 
   private debounceTimer: any;
 
@@ -171,7 +179,7 @@ export class AppComponent {
 
         this.debounceTimer = setTimeout(async () => {
           if (!code.trim()) {
-            outputElement.innerHTML = '<p class="text-slate-400 text-center p-8">Your chart will appear here.</p>';
+            outputElement.innerHTML = '<p class="text-slate-400 text-center p-8 select-none">Your chart will appear here.</p>';
             this.isLoading.set(false);
             return;
           }
@@ -179,6 +187,8 @@ export class AppComponent {
             const svg = await this.mermaidService.render(code, theme);
             outputElement.innerHTML = svg;
             this.errorMessage.set(null);
+            // Reset zoom when code changes significantly or theme changes
+            // Optional: keep zoom level but maybe center it? For now, let's keep user state.
           } catch (e: any) {
             const friendlyMessage = this.parseMermaidError(e);
             this.errorMessage.set(friendlyMessage);
@@ -210,6 +220,54 @@ export class AppComponent {
     this.selectedTheme.set(newTheme);
   }
 
+  // --- Pan & Zoom Logic ---
+
+  zoomIn(): void {
+    this.zoomScale.update(s => Math.min(s * 1.2, 5)); // Max zoom 5x
+  }
+
+  zoomOut(): void {
+    this.zoomScale.update(s => Math.max(s / 1.2, 0.2)); // Min zoom 0.2x
+  }
+
+  resetZoom(): void {
+    this.zoomScale.set(1);
+    this.panOffset.set({ x: 0, y: 0 });
+  }
+
+  onMouseDown(event: MouseEvent): void {
+    // Only drag with left mouse button
+    if (event.button !== 0) return;
+    
+    event.preventDefault(); // Prevent text selection
+    this.isPanning.set(true);
+    this.dragStart = { x: event.clientX, y: event.clientY };
+    this.initialPan = { ...this.panOffset() };
+  }
+
+  onMouseMove(event: MouseEvent): void {
+    if (!this.isPanning()) return;
+    
+    event.preventDefault();
+    const dx = event.clientX - this.dragStart.x;
+    const dy = event.clientY - this.dragStart.y;
+    
+    this.panOffset.set({
+      x: this.initialPan.x + dx,
+      y: this.initialPan.y + dy
+    });
+  }
+
+  onMouseUp(): void {
+    this.isPanning.set(false);
+  }
+
+  onMouseLeave(): void {
+    this.isPanning.set(false);
+  }
+
+  // --- Download Logic ---
+
   downloadSVG(): void {
     const svgContent = this.chartOutput()?.nativeElement.innerHTML;
     if (!svgContent || this.errorMessage()) return;
@@ -231,8 +289,10 @@ export class AppComponent {
 
     const scaleFactor = 2; // for higher resolution
     const viewBox = svgElement.viewBox.baseVal;
-    const width = viewBox.width * scaleFactor;
-    const height = viewBox.height * scaleFactor;
+    
+    // Fallback if viewBox is missing
+    const width = (viewBox?.width || svgElement.clientWidth) * scaleFactor;
+    const height = (viewBox?.height || svgElement.clientHeight) * scaleFactor;
 
     const svgContent = new XMLSerializer().serializeToString(svgElement);
     const canvas = document.createElement('canvas');
@@ -241,6 +301,10 @@ export class AppComponent {
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    // Fill white background (optional, but good for PNG)
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, width, height);
 
     const img = new Image();
     const dataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgContent)));
@@ -273,6 +337,7 @@ export class AppComponent {
   loadExample(code: string): void {
     this.mermaidCode.set(code);
     this.closeExampleModal();
+    this.resetZoom();
   }
 
   private parseMermaidError(error: any): string {

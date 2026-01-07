@@ -1,6 +1,8 @@
+
 /* Ensures the generated SVG scales correctly within its container */
 :host ::ng-deep .mermaid svg {
-  max-width: 100%;
+  /* Allow the SVG to take its natural width so zooming works effectively on wide charts */
+  max-width: none !important; 
   height: auto;
 }
 
@@ -24,4 +26,12 @@
 .editor-container pre[class*="language-"] code {
   line-height: 1.5;
   font-family: "Fira Code", monospace;
+}
+
+/* Panning Cursors */
+.cursor-grab {
+  cursor: grab;
+}
+.cursor-grabbing {
+  cursor: grabbing;
 }
