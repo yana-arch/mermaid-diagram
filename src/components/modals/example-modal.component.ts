@@ -9,12 +9,16 @@ import { CommonModule } from '@angular/common';
   template: `
     @if (isOpen()) {
       <div class="fixed inset-0 bg-black/60 z-40 animate-fade-in backdrop-blur-sm" (click)="close.emit()"></div>
-      <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl z-50 w-full max-w-4xl max-h-[85vh] flex flex-col animate-slide-up">
+      <!-- Responsive Modal Container -->
+      <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 border border-slate-700 shadow-2xl z-50 flex flex-col animate-slide-up
+                  w-[95%] h-[90vh] rounded-xl
+                  sm:w-full sm:max-w-4xl sm:h-auto sm:max-h-[85vh]">
+        
         <!-- Header -->
-        <div class="flex justify-between items-center p-5 border-b border-slate-700 flex-shrink-0 bg-slate-800/95 backdrop-blur z-10 rounded-t-xl">
+        <div class="flex justify-between items-center p-4 sm:p-5 border-b border-slate-700 flex-shrink-0 bg-slate-800/95 backdrop-blur z-10 rounded-t-xl">
           <div>
-            <h3 class="text-xl font-bold text-white">Example Gallery</h3>
-            <p class="text-sm text-slate-400">Select a template to get started</p>
+            <h3 class="text-lg sm:text-xl font-bold text-white">Example Gallery</h3>
+            <p class="text-xs sm:text-sm text-slate-400">Select a template</p>
           </div>
           <button (click)="close.emit()" class="text-slate-400 hover:text-white transition-colors p-2 hover:bg-slate-700 rounded-lg">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -22,9 +26,9 @@ import { CommonModule } from '@angular/common';
         </div>
 
         <!-- Controls: Search & Tabs -->
-        <div class="border-b border-slate-700 bg-slate-800/50 flex flex-col">
+        <div class="border-b border-slate-700 bg-slate-800/50 flex flex-col shrink-0">
           <!-- Search -->
-          <div class="px-5 py-3 border-b border-slate-700/50">
+          <div class="px-4 py-2 sm:px-5 sm:py-3 border-b border-slate-700/50">
             <div class="relative">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -40,10 +44,10 @@ import { CommonModule } from '@angular/common';
           </div>
           
           <!-- Category Tabs -->
-          <div class="flex overflow-x-auto custom-scrollbar px-5 py-3 gap-2">
+          <div class="flex overflow-x-auto custom-scrollbar px-4 py-2 sm:px-5 sm:py-3 gap-2">
              <button 
                (click)="selectedCategory.set('All')"
-               class="whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-medium transition-all border"
+               class="whitespace-nowrap px-3 py-1.5 sm:px-4 rounded-full text-xs font-medium transition-all border"
                [ngClass]="selectedCategory() === 'All' 
                  ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-900/20' 
                  : 'bg-slate-700/50 text-slate-400 border-slate-600 hover:text-slate-200 hover:bg-slate-700'"
@@ -53,7 +57,7 @@ import { CommonModule } from '@angular/common';
              @for (cat of uniqueCategories(); track cat) {
                <button 
                  (click)="selectedCategory.set(cat)"
-                 class="whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-medium transition-all border"
+                 class="whitespace-nowrap px-3 py-1.5 sm:px-4 rounded-full text-xs font-medium transition-all border"
                  [ngClass]="selectedCategory() === cat
                    ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-900/20' 
                    : 'bg-slate-700/50 text-slate-400 border-slate-600 hover:text-slate-200 hover:bg-slate-700'"
@@ -65,7 +69,7 @@ import { CommonModule } from '@angular/common';
         </div>
 
         <!-- Body -->
-        <div class="p-6 overflow-y-auto custom-scrollbar">
+        <div class="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-grow">
           @if (displayedItems().length === 0) {
              <div class="text-center py-12 text-slate-500">
                <p>No examples found matching your criteria.</p>

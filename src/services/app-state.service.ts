@@ -5,6 +5,7 @@ import { isPlatformBrowser } from '@angular/common';
 const THEMES = ['neutral', 'dark', 'forest', 'default'] as const;
 export type Theme = (typeof THEMES)[number];
 export type AiMode = 'generate' | 'refine';
+export type MobileTab = 'editor' | 'preview';
 
 const INITIAL_CODE = `graph TD
     A[Start] --> B{Is it responsive?};
@@ -24,9 +25,12 @@ export class AppStateService {
   readonly mermaidCode = signal<string>(INITIAL_CODE);
   readonly theme = signal<Theme>('neutral');
   
+  // UI State
+  readonly mobileTab = signal<MobileTab>('editor'); // New state for mobile view
+
   // Modal State Signals
   readonly isAiModalOpen = signal(false);
-  readonly aiModalMode = signal<AiMode>('generate'); // New signal to track mode
+  readonly aiModalMode = signal<AiMode>('generate');
   
   readonly isExampleModalOpen = signal(false);
   readonly isExportModalOpen = signal(false);
@@ -66,5 +70,9 @@ export class AppStateService {
 
   setTheme(theme: Theme) {
     this.theme.set(theme);
+  }
+
+  setMobileTab(tab: MobileTab) {
+    this.mobileTab.set(tab);
   }
 }

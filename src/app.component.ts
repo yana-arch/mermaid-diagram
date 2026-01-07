@@ -31,15 +31,27 @@ export class AppComponent {
   // Import from data file
   readonly chartExamples = CHART_EXAMPLES;
 
+  // Simple getter to help template logic, though mostly handled by CSS classes
+  get isLargeScreen(): boolean {
+    if (typeof window !== 'undefined') {
+        return window.innerWidth >= 1024;
+    }
+    return true;
+  }
+
   handleAiCode(code: string) {
     this.store.setCode(code);
     this.store.isAiModalOpen.set(false);
+    // Switch to preview tab on mobile to see result
+    this.store.setMobileTab('preview');
   }
 
   handleExampleLoad(code: string) {
     this.store.setCode(code);
     this.store.isExampleModalOpen.set(false);
     this.previewComponent()?.resetZoom();
+    // Switch to preview tab on mobile to see result
+    this.store.setMobileTab('preview');
   }
 
   handleExport(event: {format: ExportFormat, scale: number}) {

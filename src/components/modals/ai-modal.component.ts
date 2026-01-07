@@ -13,13 +13,15 @@ export type AiTab = 'text' | 'url' | 'file';
   template: `
     @if (isOpen()) {
       <div class="fixed inset-0 bg-black/70 z-50 animate-fade-in backdrop-blur-sm" (click)="close.emit()"></div>
-      <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 border border-indigo-500/50 rounded-2xl shadow-2xl z-50 w-full max-w-lg flex flex-col animate-scale-in">
+      <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 border border-indigo-500/50 shadow-2xl z-50 flex flex-col animate-scale-in
+                  w-[95%] rounded-xl max-h-[90vh]
+                  sm:w-full sm:max-w-lg sm:rounded-2xl">
         
         <!-- Header -->
-        <div class="flex justify-between items-center p-5 border-b border-slate-700">
+        <div class="flex justify-between items-center p-4 sm:p-5 border-b border-slate-700 shrink-0">
           <div class="flex items-center gap-2">
              <svg class="text-indigo-400" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
-             <h3 class="text-xl font-bold text-white">
+             <h3 class="text-lg sm:text-xl font-bold text-white">
                @if(mode() === 'refine') { Refine / Fix Chart } @else { Generate with AI }
              </h3>
           </div>
@@ -30,14 +32,14 @@ export type AiTab = 'text' | 'url' | 'file';
   
         <!-- Tabs (Only show in Generate Mode) -->
         @if(mode() === 'generate') {
-          <div class="flex border-b border-slate-700 px-5 gap-4">
-            <button (click)="setTab('text')" class="py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none" [ngClass]="activeTab() === 'text' ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-slate-400 hover:text-slate-200'">Describe</button>
-            <button (click)="setTab('url')" class="py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none" [ngClass]="activeTab() === 'url' ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-slate-400 hover:text-slate-200'">From URL</button>
-            <button (click)="setTab('file')" class="py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none" [ngClass]="activeTab() === 'file' ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-slate-400 hover:text-slate-200'">From File</button>
+          <div class="flex border-b border-slate-700 px-4 sm:px-5 gap-4 shrink-0 overflow-x-auto">
+            <button (click)="setTab('text')" class="py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none whitespace-nowrap" [ngClass]="activeTab() === 'text' ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-slate-400 hover:text-slate-200'">Describe</button>
+            <button (click)="setTab('url')" class="py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none whitespace-nowrap" [ngClass]="activeTab() === 'url' ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-slate-400 hover:text-slate-200'">From URL</button>
+            <button (click)="setTab('file')" class="py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none whitespace-nowrap" [ngClass]="activeTab() === 'file' ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-slate-400 hover:text-slate-200'">From File</button>
           </div>
         }
   
-        <div class="p-6">
+        <div class="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-grow">
           <!-- Text Tab / Refine Mode -->
           <div [class.hidden]="mode() === 'generate' && activeTab() !== 'text'">
              <label class="block text-sm font-medium text-slate-300 mb-2">
@@ -53,9 +55,9 @@ export type AiTab = 'text' | 'url' | 'file';
              <div class="space-y-4">
                <div>
                  <label class="block text-sm font-medium text-slate-300 mb-2">Public URL (Text content)</label>
-                 <div class="flex gap-2">
+                 <div class="flex gap-2 flex-col sm:flex-row">
                    <input #urlInput type="url" class="flex-1 bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="https://example.com/docs" [disabled]="isAiLoading()"/>
-                   <button (click)="fetchUrl()" [disabled]="isAiLoading()" class="bg-slate-700 hover:bg-slate-600 text-white font-medium px-4 rounded-lg border border-slate-600 transition-colors">Fetch</button>
+                   <button (click)="fetchUrl()" [disabled]="isAiLoading()" class="bg-slate-700 hover:bg-slate-600 text-white font-medium px-4 py-2 sm:py-0 rounded-lg border border-slate-600 transition-colors">Fetch</button>
                  </div>
                </div>
                <div>
@@ -70,9 +72,9 @@ export type AiTab = 'text' | 'url' | 'file';
             <div class="space-y-4">
                <div>
                  <label class="block text-sm font-medium text-slate-300 mb-2">Upload Source File</label>
-                 <div class="relative border-2 border-dashed border-slate-600 rounded-lg p-6 flex flex-col items-center justify-center text-center hover:border-indigo-500 transition-colors bg-slate-900/50 group">
+                 <div class="relative border-2 border-dashed border-slate-600 rounded-lg p-4 sm:p-6 flex flex-col items-center justify-center text-center hover:border-indigo-500 transition-colors bg-slate-900/50 group">
                    @if(!selectedFile()) {
-                     <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-slate-500 mb-3 group-hover:text-indigo-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 sm:h-10 sm:w-10 text-slate-500 mb-3 group-hover:text-indigo-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                      </svg>
                      <p class="text-sm text-slate-400 mb-1">Drag & drop or click to upload</p>
@@ -118,7 +120,7 @@ export type AiTab = 'text' | 'url' | 'file';
           }
         </div>
   
-        <div class="p-5 border-t border-slate-700 bg-slate-800/50 rounded-b-2xl flex justify-end gap-3">
+        <div class="p-4 sm:p-5 border-t border-slate-700 bg-slate-800/50 rounded-b-xl sm:rounded-b-2xl flex justify-end gap-3 shrink-0">
           <button (click)="close.emit()" [disabled]="isAiLoading()" class="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors disabled:opacity-50">Cancel</button>
           <button (click)="generate()" [disabled]="isAiLoading()" class="bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/50 text-white font-bold py-2 px-6 rounded-lg shadow-md flex items-center gap-2 transition-all">
              @if (isAiLoading()) {
@@ -126,9 +128,9 @@ export type AiTab = 'text' | 'url' | 'file';
                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Thinking...
+                <span class="hidden sm:inline">Thinking...</span>
              } @else {
-                {{ mode() === 'refine' ? 'Update Code' : 'Generate' }}
+                {{ mode() === 'refine' ? 'Update' : 'Generate' }}
              }
           </button>
         </div>

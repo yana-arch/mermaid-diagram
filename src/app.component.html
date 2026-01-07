@@ -1,45 +1,83 @@
 
-<main class="min-h-screen bg-slate-900 text-slate-200 font-sans p-4 sm:p-6 lg:p-8">
-  <div class="max-w-screen-2xl mx-auto h-full flex flex-col">
-    <header class="text-center mb-8 shrink-0">
-      <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-emerald-500">
-        Mermaid Chart Generator
+<main class="min-h-screen bg-slate-900 text-slate-200 font-sans p-3 sm:p-6 lg:p-8 flex flex-col h-[100dvh]">
+  <div class="max-w-screen-2xl mx-auto w-full h-full flex flex-col">
+    
+    <!-- Header -->
+    <header class="text-center mb-4 sm:mb-8 shrink-0">
+      <h1 class="text-2xl sm:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-emerald-500 truncate">
+        Mermaid Generator
       </h1>
-      <p class="mt-2 text-lg text-slate-400">Instantly visualize your Mermaid diagrams.</p>
+      <p class="hidden sm:block mt-2 text-lg text-slate-400">Instantly visualize your Mermaid diagrams.</p>
     </header>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 flex-grow">
+    <!-- Mobile View Switcher (Visible only on LG and below) -->
+    <div class="lg:hidden flex bg-slate-800 p-1 rounded-lg mb-4 shrink-0 mx-auto w-full max-w-md border border-slate-700">
+      <button 
+        (click)="store.setMobileTab('editor')"
+        class="flex-1 py-2 text-sm font-medium rounded-md transition-all duration-200 flex items-center justify-center gap-2"
+        [class]="store.mobileTab() === 'editor' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+        Editor
+      </button>
+      <button 
+        (click)="store.setMobileTab('preview')"
+        class="flex-1 py-2 text-sm font-medium rounded-md transition-all duration-200 flex items-center justify-center gap-2"
+        [class]="store.mobileTab() === 'preview' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        Preview
+      </button>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="flex-grow min-h-0 relative lg:grid lg:grid-cols-2 lg:gap-8">
       
       <!-- Editor Column -->
-      <div class="flex flex-col h-[70vh] lg:h-[calc(100vh-14rem)]">
+      <div 
+        class="flex flex-col h-full lg:h-[calc(100vh-14rem)] absolute inset-0 lg:relative lg:block transition-opacity duration-300"
+        [class.z-10]="store.mobileTab() === 'editor'"
+        [class.opacity-100]="store.mobileTab() === 'editor'"
+        [class.opacity-0]="store.mobileTab() !== 'editor'"
+        [class.pointer-events-none]="store.mobileTab() !== 'editor' && !isLargeScreen"
+        [class.lg:opacity-100]="true"
+        [class.lg:pointer-events-auto]="true"
+      >
         <app-code-editor 
           [code]="store.mermaidCode()" 
           (codeChange)="store.setCode($event)"
         >
           <div actions class="flex gap-2">
-            <!-- Refine Button -->
-             <button (click)="store.openAiModal('refine')" [disabled]="!store.mermaidCode().trim()" class="text-xs bg-amber-600 hover:bg-amber-500 disabled:bg-amber-600/50 disabled:cursor-not-allowed text-white transition-colors px-3 py-1 rounded-md flex items-center gap-1.5 border border-amber-500/50 shadow-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-              Refine
+            <!-- Mobile: Condensed Buttons -->
+             <button (click)="store.openAiModal('refine')" [disabled]="!store.mermaidCode().trim()" class="text-xs bg-amber-600 hover:bg-amber-500 disabled:bg-amber-600/50 disabled:cursor-not-allowed text-white transition-colors px-2 sm:px-3 py-1.5 rounded-md flex items-center gap-1.5 border border-amber-500/50 shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              <span class="hidden sm:inline">Refine</span>
             </button>
             
-            <!-- Generate Button -->
-            <button (click)="store.openAiModal('generate')" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white transition-colors px-3 py-1 rounded-md flex items-center gap-1.5 border border-indigo-500/50 shadow-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/></svg>
-              AI Generate
+            <button (click)="store.openAiModal('generate')" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white transition-colors px-2 sm:px-3 py-1.5 rounded-md flex items-center gap-1.5 border border-indigo-500/50 shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/></svg>
+              <span class="hidden sm:inline">AI Generate</span>
+              <span class="sm:hidden">AI</span>
             </button>
             
-            <!-- Examples Button -->
-            <button (click)="store.isExampleModalOpen.set(true)" class="text-xs bg-slate-700 hover:bg-slate-600 transition-colors px-3 py-1 rounded-md flex items-center gap-1.5 border border-slate-600">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-              Examples
+            <button (click)="store.isExampleModalOpen.set(true)" class="text-xs bg-slate-700 hover:bg-slate-600 transition-colors px-2 sm:px-3 py-1.5 rounded-md flex items-center gap-1.5 border border-slate-600">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+              <span class="hidden sm:inline">Examples</span>
             </button>
           </div>
         </app-code-editor>
       </div>
 
       <!-- Preview Column -->
-      <div class="flex flex-col h-[70vh] lg:h-[calc(100vh-14rem)]">
+      <div 
+        class="flex flex-col h-full lg:h-[calc(100vh-14rem)] absolute inset-0 lg:relative lg:block transition-opacity duration-300"
+        [class.z-10]="store.mobileTab() === 'preview'"
+        [class.opacity-100]="store.mobileTab() === 'preview'"
+        [class.opacity-0]="store.mobileTab() !== 'preview'"
+        [class.pointer-events-none]="store.mobileTab() !== 'preview' && !isLargeScreen"
+        [class.lg:opacity-100]="true"
+        [class.lg:pointer-events-auto]="true"
+      >
         <app-chart-preview 
           #preview
           [code]="store.mermaidCode()"
@@ -61,7 +99,7 @@
       </div>
     </div>
 
-    <footer class="text-center mt-8 text-slate-500 text-sm shrink-0">
+    <footer class="text-center mt-4 text-slate-500 text-xs sm:text-sm shrink-0 hidden lg:block">
       <p>Powered by Angular & Mermaid.js</p>
     </footer>
   </div>
