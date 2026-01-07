@@ -1,451 +1,79 @@
 
 <main class="min-h-screen bg-slate-900 text-slate-200 font-sans p-4 sm:p-6 lg:p-8">
-  <div class="max-w-screen-2xl mx-auto">
-    <header class="text-center mb-8">
+  <div class="max-w-screen-2xl mx-auto h-full flex flex-col">
+    <header class="text-center mb-8 shrink-0">
       <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-emerald-500">
         Mermaid Chart Generator
       </h1>
-      <p class="mt-2 text-lg text-slate-400">Instantly visualize your Mermaid diagrams with a live-updating editor.</p>
+      <p class="mt-2 text-lg text-slate-400">Instantly visualize your Mermaid diagrams.</p>
     </header>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 flex-grow">
       
-      <!-- Left Panel: Editor -->
-      <div class="flex flex-col h-[70vh]">
-        <div class="flex justify-between items-center mb-2">
-          <label for="mermaid-code" class="text-sm font-medium text-slate-300">Mermaid Code Editor</label>
-          
-          <div class="flex gap-2">
-            <!-- AI Button -->
-            <button (click)="openAiModal()" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white transition-colors px-3 py-1 rounded-md flex items-center gap-1.5 shadow-lg shadow-indigo-900/20 border border-indigo-500/50">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+      <!-- Editor Column -->
+      <div class="flex flex-col h-[70vh] lg:h-[calc(100vh-14rem)]">
+        <app-code-editor 
+          [code]="store.mermaidCode()" 
+          (codeChange)="store.setCode($event)"
+        >
+          <div actions class="flex gap-2">
+            <button (click)="store.isAiModalOpen.set(true)" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white transition-colors px-3 py-1 rounded-md flex items-center gap-1.5 border border-indigo-500/50">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/></svg>
               AI Generate
             </button>
-
-            <button (click)="openExampleModal()" class="text-xs bg-slate-700 hover:bg-slate-600 transition-colors px-3 py-1 rounded-md flex items-center gap-1.5">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-              Load Example
+            <button (click)="store.isExampleModalOpen.set(true)" class="text-xs bg-slate-700 hover:bg-slate-600 transition-colors px-3 py-1 rounded-md flex items-center gap-1.5">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+              Examples
             </button>
           </div>
-        </div>
-        <div class="editor-container relative flex-grow w-full h-full bg-slate-800/50 border border-slate-700 rounded-lg overflow-hidden">
-          <!-- Textarea (Input Layer) -->
-          <textarea 
-            #codeTextarea
-            id="mermaid-code"
-            class="editor-layer editor-textarea absolute inset-0 w-full h-full focus:outline-none"
-            [value]="mermaidCode()"
-            (input)="onCodeChange($event)"
-            (scroll)="onEditorScroll($event)"
-            placeholder="Enter your Mermaid syntax here..."
-            spellcheck="false"
-          ></textarea>
-          
-          <!-- Syntax Highlighter (Background Layer) -->
-          <pre #codeContainer class="editor-layer editor-pre absolute inset-0 w-full h-full"><code #codeEditor class="language-mermaid"></code></pre>
-        </div>
+        </app-code-editor>
       </div>
 
-      <!-- Right Panel: Output -->
-      <div class="flex flex-col h-[70vh]">
-        <div class="flex flex-wrap gap-4 justify-between items-center mb-2">
-          <h2 class="text-sm font-medium text-slate-300">Live Preview</h2>
-       
-          <div class="flex items-center gap-4">
-            <!-- Theme Selector -->
-            <div class="flex items-center gap-2">
-              <label for="theme-select" class="text-xs text-slate-400">Theme:</label>
-              <select 
-                id="theme-select"
-                class="bg-slate-700 border border-slate-600 rounded-md text-xs py-1 px-2 text-slate-200 focus:ring-1 focus:ring-sky-500 focus:border-sky-500"
-                (change)="onThemeChange($event)"
-                [value]="selectedTheme()">
-                @for (theme of themes; track theme) {
-                  <option [value]="theme">{{ theme.charAt(0).toUpperCase() + theme.slice(1) }}</option>
-                }
-              </select>
-            </div>
-       
-            <!-- Export Modal Trigger -->
-            <button 
-              (click)="openExportModal()"
-              [disabled]="!mermaidCode().trim() || !!errorMessage()"
-              class="disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-3 py-1 rounded-md transition-colors shadow-lg shadow-emerald-900/20"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-              Export Image
-            </button>
-       
-            @if (isLoading()) {
-              <div class="flex items-center space-x-2 text-sky-400 text-xs">
-                <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span>Rendering...</span>
-              </div>
-            }
-          </div>
-        </div>
-        
-        @if (errorMessage()) {
-          <div class="bg-red-900/50 border border-red-700 text-red-300 p-3 rounded-lg mb-4 text-xs" role="alert">
-            <p class="font-bold mb-1">Syntax Error</p>
-            <pre class="whitespace-pre-wrap font-mono">{{ errorMessage() }}</pre>
-          </div>
-        }
-        
-        <!-- Viewport for Pan/Zoom -->
-        <div class="flex-grow bg-white border border-slate-700 rounded-lg overflow-hidden relative select-none">
-            
-            <!-- Zoom Controls -->
-            <div class="absolute bottom-4 right-4 z-20 flex flex-col gap-2 bg-slate-800/90 backdrop-blur-sm p-2 rounded-lg border border-slate-600 shadow-xl">
-              <button (click)="zoomIn()" class="p-1.5 text-slate-200 hover:text-sky-400 hover:bg-slate-700 rounded transition" title="Zoom In">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-              </button>
-              <button (click)="resetZoom()" class="p-1.5 text-slate-200 hover:text-sky-400 hover:bg-slate-700 rounded transition" title="Reset View">
-                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
-              </button>
-              <button (click)="zoomOut()" class="p-1.5 text-slate-200 hover:text-sky-400 hover:bg-slate-700 rounded transition" title="Zoom Out">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-              </button>
-            </div>
-
-            <!-- Pannable Container -->
-            <div 
-              class="w-full h-full flex items-center justify-center transition-transform duration-75 origin-top-left"
-              [class.cursor-grab]="!isPanning()"
-              [class.cursor-grabbing]="isPanning()"
-              (mousedown)="onMouseDown($event)"
-              (mousemove)="onMouseMove($event)"
-              (mouseup)="onMouseUp()"
-              (mouseleave)="onMouseLeave()"
-            >
-               <div 
-                 #chartOutput 
-                 class="origin-center transition-transform duration-75 pointer-events-none"
-                 [style.transform]="'translate(' + panOffset().x + 'px, ' + panOffset().y + 'px) scale(' + zoomScale() + ')'"
-                >
-                  <!-- Chart is rendered here -->
-               </div>
-            </div>
-        </div>
+      <!-- Preview Column -->
+      <div class="flex flex-col h-[70vh] lg:h-[calc(100vh-14rem)]">
+        <app-chart-preview 
+          #preview
+          [code]="store.mermaidCode()"
+          [theme]="store.theme()"
+          (onRenderStart)="store.isRendering.set(true)"
+          (onRenderEnd)="store.isRendering.set(false)"
+          (onRenderError)="store.renderError.set($event)"
+        >
+          <app-toolbar 
+            controls 
+            [themes]="store.themes" 
+            [selectedTheme]="store.theme()" 
+            [isRendering]="store.isRendering()"
+            [disabledExport]="!!store.renderError() || !store.mermaidCode().trim()"
+            (themeChange)="store.setTheme($event)"
+            (openExport)="store.isExportModalOpen.set(true)"
+          ></app-toolbar>
+        </app-chart-preview>
       </div>
     </div>
 
-    <footer class="text-center mt-8 text-slate-500 text-sm">
-      <p>Powered by Angular & Mermaid.js | Read the <a href="https://mermaid.js.org/intro/" target="_blank" rel="noopener noreferrer" class="text-sky-500 hover:underline">Mermaid Documentation</a></p>
+    <footer class="text-center mt-8 text-slate-500 text-sm shrink-0">
+      <p>Powered by Angular & Mermaid.js</p>
     </footer>
   </div>
 
-  <!-- AI Generation Modal -->
-  @if (isAiModalOpen()) {
-    <div class="fixed inset-0 bg-black/70 z-50 animate-fade-in backdrop-blur-sm" (click)="closeAiModal()"></div>
-    <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 border border-indigo-500/50 rounded-2xl shadow-2xl z-50 w-full max-w-lg flex flex-col animate-scale-in">
-      
-      <!-- Header -->
-      <div class="flex justify-between items-center p-5 border-b border-slate-700">
-        <div class="flex items-center gap-2">
-           <svg class="text-indigo-400" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
-           <h3 class="text-xl font-bold text-white">Generate with AI</h3>
-        </div>
-        <button (click)="closeAiModal()" [disabled]="isAiLoading()" class="text-slate-400 hover:text-white transition-colors p-1 rounded hover:bg-slate-700 disabled:opacity-50">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-      </div>
+  <!-- Modals -->
+  <app-ai-modal 
+    [isOpen]="store.isAiModalOpen()"
+    (close)="store.isAiModalOpen.set(false)"
+    (codeGenerated)="handleAiCode($event)"
+  ></app-ai-modal>
 
-      <!-- Navigation Tabs -->
-      <div class="flex border-b border-slate-700 px-5 gap-4">
-        <button 
-          (click)="setActiveAiTab('text')"
-          class="py-3 text-sm font-medium border-b-2 transition-colors"
-          [class.border-indigo-500]="activeAiTab() === 'text'"
-          [class.text-indigo-400]="activeAiTab() === 'text'"
-          [class.border-transparent]="activeAiTab() !== 'text'"
-          [class.text-slate-400]="activeAiTab() !== 'text'"
-          [class.hover:text-slate-200]="activeAiTab() !== 'text'"
-        >Describe</button>
-        <button 
-          (click)="setActiveAiTab('url')"
-          class="py-3 text-sm font-medium border-b-2 transition-colors"
-          [class.border-indigo-500]="activeAiTab() === 'url'"
-          [class.text-indigo-400]="activeAiTab() === 'url'"
-          [class.border-transparent]="activeAiTab() !== 'url'"
-          [class.text-slate-400]="activeAiTab() !== 'url'"
-          [class.hover:text-slate-200]="activeAiTab() !== 'url'"
-        >From URL</button>
-        <button 
-          (click)="setActiveAiTab('file')"
-          class="py-3 text-sm font-medium border-b-2 transition-colors"
-          [class.border-indigo-500]="activeAiTab() === 'file'"
-          [class.text-indigo-400]="activeAiTab() === 'file'"
-          [class.border-transparent]="activeAiTab() !== 'file'"
-          [class.text-slate-400]="activeAiTab() !== 'file'"
-          [class.hover:text-slate-200]="activeAiTab() !== 'file'"
-        >From File</button>
-      </div>
+  <app-example-modal
+    [isOpen]="store.isExampleModalOpen()"
+    [examples]="chartExamples"
+    (close)="store.isExampleModalOpen.set(false)"
+    (select)="handleExampleLoad($event)"
+  ></app-example-modal>
 
-      <!-- Body -->
-      <div class="p-6">
-        
-        <!-- Tab 1: Text Prompt -->
-        <div [class.hidden]="activeAiTab() !== 'text'">
-           <label for="ai-prompt" class="block text-sm font-medium text-slate-300 mb-2">Instructions</label>
-           <textarea 
-             #aiPromptInput
-             id="ai-prompt"
-             class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all resize-none"
-             rows="5"
-             placeholder="Describe your diagram structure, relationships, and labels..."
-             [disabled]="isAiLoading()"
-           ></textarea>
-        </div>
-
-        <!-- Tab 2: URL Input -->
-        <div [class.hidden]="activeAiTab() !== 'url'">
-           <label for="ai-url" class="block text-sm font-medium text-slate-300 mb-2">Public URL (Text content)</label>
-           <div class="flex gap-2">
-             <input 
-               #aiUrlInput
-               id="ai-url"
-               type="url"
-               class="flex-1 bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-               placeholder="https://example.com/api-docs"
-               [disabled]="isAiLoading()"
-             />
-             <button 
-               (click)="fetchUrlContent()"
-               [disabled]="isAiLoading()"
-               class="bg-slate-700 hover:bg-slate-600 text-white font-medium px-4 rounded-lg transition-colors border border-slate-600"
-             >Fetch</button>
-           </div>
-           <p class="mt-2 text-xs text-slate-500">Note: Some websites may block access due to CORS policies.</p>
-        </div>
-
-        <!-- Tab 3: File Input -->
-        <div [class.hidden]="activeAiTab() !== 'file'">
-          <label class="block text-sm font-medium text-slate-300 mb-2">Upload Source File</label>
-          
-          <div class="relative border-2 border-dashed border-slate-600 rounded-lg p-6 flex flex-col items-center justify-center text-center hover:border-indigo-500 transition-colors bg-slate-900/50">
-            
-            @if (!selectedFile()) {
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-slate-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
-              <p class="text-sm text-slate-400 mb-2">Drag & drop or click to upload</p>
-              <p class="text-xs text-slate-500">Supported: Code (.py, .js, .java...), Text (.txt, .md), Images (.png, .jpg), PDF</p>
-              <input 
-                #fileInput 
-                type="file" 
-                class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" 
-                (change)="onFileSelected($event)"
-                accept=".txt,.md,.py,.js,.ts,.java,.cpp,.html,.css,.json,.sql,.xml,.png,.jpg,.jpeg,.webp,.pdf"
-              />
-            } @else {
-              <div class="flex items-center gap-3 w-full bg-slate-800 p-3 rounded-lg border border-indigo-500/50">
-                 <div class="bg-indigo-500/20 p-2 rounded text-indigo-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-                 </div>
-                 <div class="flex-1 text-left overflow-hidden">
-                    <p class="text-sm font-medium text-white truncate">{{ selectedFile()?.name }}</p>
-                    <p class="text-xs text-slate-400">{{ selectedFile()?.type }}</p>
-                 </div>
-                 <button (click)="removeSelectedFile()" class="text-slate-400 hover:text-red-400 p-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                 </button>
-              </div>
-            }
-          </div>
-        </div>
-
-        <!-- Selected File Indicator (visible on all tabs if file selected) -->
-        @if (selectedFile() && activeAiTab() !== 'file') {
-          <div class="mt-4 flex items-center gap-2 text-xs text-indigo-300 bg-indigo-500/10 p-2 rounded border border-indigo-500/30">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/></svg>
-            <span class="truncate max-w-[200px]">Attached: {{ selectedFile()?.name }}</span>
-          </div>
-        }
-        
-        @if (aiError()) {
-          <p class="mt-3 text-xs text-red-400 flex items-center gap-1 animate-pulse">
-             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-             {{ aiError() }}
-          </p>
-        }
-      </div>
-
-      <!-- Footer -->
-      <div class="p-5 border-t border-slate-700 bg-slate-800/50 rounded-b-2xl flex justify-end gap-3">
-        <button (click)="closeAiModal()" [disabled]="isAiLoading()" class="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors disabled:opacity-50">Cancel</button>
-        <button 
-          (click)="generateWithAI()"
-          [disabled]="isAiLoading()"
-          class="bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/50 text-white font-bold py-2 px-6 rounded-lg shadow-md flex items-center gap-2 transition-all"
-        >
-          @if (isAiLoading()) {
-             <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-             </svg>
-             Thinking...
-          } @else {
-             <span>Generate</span>
-          }
-        </button>
-      </div>
-    </div>
-  }
-
-  <!-- Example Modal -->
-  @if (isExampleModalOpen()) {
-    <div class="fixed inset-0 bg-black/60 z-40 animate-fade-in" (click)="closeExampleModal()"></div>
-    <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl z-50 w-full max-w-3xl max-h-[80vh] flex flex-col animate-slide-up">
-      <div class="flex justify-between items-center p-4 border-b border-slate-700 flex-shrink-0">
-        <h3 class="text-lg font-semibold text-slate-100">Load a Chart Example</h3>
-        <button (click)="closeExampleModal()" class="text-slate-400 hover:text-white transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-      </div>
-      <div class="p-6 overflow-y-auto">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          @for (example of chartExamples; track example.name) {
-            <button (click)="loadExample(example.code)" class="text-left p-4 bg-slate-700/50 hover:bg-sky-900/40 border border-slate-700 hover:border-sky-600 rounded-lg transition-all duration-200 transform hover:-translate-y-1">
-              <h4 class="font-semibold text-sky-400">{{ example.name }}</h4>
-              <p class="text-xs text-slate-400 mt-1">Click to load this example.</p>
-            </button>
-          }
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- Export Modal -->
-  @if (isExportModalOpen()) {
-    <div class="fixed inset-0 bg-black/70 z-50 animate-fade-in backdrop-blur-sm" (click)="closeExportModal()"></div>
-    <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 border border-slate-600 rounded-2xl shadow-2xl z-50 w-full max-w-md flex flex-col animate-scale-in">
-      
-      <!-- Header -->
-      <div class="flex justify-between items-center p-5 border-b border-slate-700">
-        <h3 class="text-xl font-bold text-white">Export Diagram</h3>
-        <button (click)="closeExportModal()" class="text-slate-400 hover:text-white transition-colors p-1 rounded hover:bg-slate-700">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-      </div>
-
-      <!-- Body -->
-      <div class="p-6 flex-col gap-6">
-        
-        <!-- Format Selection -->
-        <div class="mb-6">
-          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Format</label>
-          <div class="grid grid-cols-2 gap-3">
-            <button 
-              (click)="setExportFormat('png')" 
-              class="flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all duration-200"
-              [class.border-blue-500]="selectedExportFormat() === 'png'"
-              [class.bg-blue-500/10]="selectedExportFormat() === 'png'"
-              [class.border-slate-700]="selectedExportFormat() !== 'png'"
-              [class.bg-slate-700/30]="selectedExportFormat() !== 'png'"
-              [class.hover:border-slate-500]="selectedExportFormat() !== 'png'"
-            >
-              <span class="text-lg font-bold text-blue-400 mb-1">PNG</span>
-              <span class="text-[10px] text-slate-400">Best for Web</span>
-            </button>
-
-            <button 
-              (click)="setExportFormat('jpeg')" 
-              class="flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all duration-200"
-              [class.border-orange-500]="selectedExportFormat() === 'jpeg'"
-              [class.bg-orange-500/10]="selectedExportFormat() === 'jpeg'"
-              [class.border-slate-700]="selectedExportFormat() !== 'jpeg'"
-              [class.bg-slate-700/30]="selectedExportFormat() !== 'jpeg'"
-              [class.hover:border-slate-500]="selectedExportFormat() !== 'jpeg'"
-            >
-              <span class="text-lg font-bold text-orange-400 mb-1">JPG</span>
-              <span class="text-[10px] text-slate-400">Small File</span>
-            </button>
-
-            <button 
-              (click)="setExportFormat('webp')" 
-              class="flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all duration-200"
-              [class.border-purple-500]="selectedExportFormat() === 'webp'"
-              [class.bg-purple-500/10]="selectedExportFormat() === 'webp'"
-              [class.border-slate-700]="selectedExportFormat() !== 'webp'"
-              [class.bg-slate-700/30]="selectedExportFormat() !== 'webp'"
-              [class.hover:border-slate-500]="selectedExportFormat() !== 'webp'"
-            >
-              <span class="text-lg font-bold text-purple-400 mb-1">WebP</span>
-              <span class="text-[10px] text-slate-400">Modern</span>
-            </button>
-
-            <button 
-              (click)="setExportFormat('svg')" 
-              class="flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all duration-200"
-              [class.border-emerald-500]="selectedExportFormat() === 'svg'"
-              [class.bg-emerald-500/10]="selectedExportFormat() === 'svg'"
-              [class.border-slate-700]="selectedExportFormat() !== 'svg'"
-              [class.bg-slate-700/30]="selectedExportFormat() !== 'svg'"
-              [class.hover:border-slate-500]="selectedExportFormat() !== 'svg'"
-            >
-              <span class="text-lg font-bold text-emerald-400 mb-1">SVG</span>
-              <span class="text-[10px] text-slate-400">Vector</span>
-            </button>
-          </div>
-          
-          <!-- Contextual Help Text -->
-          <div class="mt-2 text-xs text-slate-500 h-4">
-            @switch (selectedExportFormat()) {
-              @case ('png') { Supports transparency. High quality. }
-              @case ('jpeg') { No transparency (white background). Smaller size. }
-              @case ('webp') { Efficient compression with transparency. }
-              @case ('svg') { Infinite scalability. Editable in Illustrator/Inkscape. }
-            }
-          </div>
-        </div>
-
-        <!-- Scaling Options (Raster Only) -->
-        <div class="mb-2 transition-opacity duration-200" [class.opacity-50]="selectedExportFormat() === 'svg'" [class.pointer-events-none]="selectedExportFormat() === 'svg'">
-          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Resolution Scale</label>
-          <div class="flex bg-slate-900/50 p-1.5 rounded-lg border border-slate-700">
-            <button 
-              (click)="setExportScale(1)"
-              class="flex-1 py-2 text-xs font-medium rounded-md transition-all"
-              [class.bg-slate-700]="exportScale() === 1"
-              [class.text-white]="exportScale() === 1"
-              [class.text-slate-400]="exportScale() !== 1"
-              [class.shadow-sm]="exportScale() === 1"
-            >1x</button>
-            <button 
-              (click)="setExportScale(2)"
-              class="flex-1 py-2 text-xs font-medium rounded-md transition-all"
-              [class.bg-slate-700]="exportScale() === 2"
-              [class.text-white]="exportScale() === 2"
-              [class.text-slate-400]="exportScale() !== 2"
-              [class.shadow-sm]="exportScale() === 2"
-            >2x</button>
-            <button 
-              (click)="setExportScale(4)"
-              class="flex-1 py-2 text-xs font-medium rounded-md transition-all"
-              [class.bg-slate-700]="exportScale() === 4"
-              [class.text-white]="exportScale() === 4"
-              [class.text-slate-400]="exportScale() !== 4"
-              [class.shadow-sm]="exportScale() === 4"
-            >4x</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Footer Action -->
-      <div class="p-5 border-t border-slate-700 bg-slate-800/50 rounded-b-2xl">
-        <button 
-          (click)="confirmExport()"
-          class="w-full bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold py-3 px-4 rounded-lg shadow-lg transform transition active:scale-[0.98] flex justify-center items-center gap-2"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-          Download {{ selectedExportFormat().toUpperCase() }}
-        </button>
-      </div>
-
-    </div>
-  }
+  <app-export-modal
+    [isOpen]="store.isExportModalOpen()"
+    (close)="store.isExportModalOpen.set(false)"
+    (confirm)="handleExport($event)"
+  ></app-export-modal>
 </main>
