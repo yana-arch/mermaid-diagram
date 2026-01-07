@@ -3,30 +3,54 @@ import { Injectable } from '@angular/core';
 import { GoogleGenAI } from "@google/genai";
 
 export interface AiInputData {
-  prompt: string; // User instructions
-  contextCode?: string; // Existing Mermaid code (for Refine/Fix mode)
+  prompt: string; 
+  contextCode?: string; 
   media?: {
     mimeType: string;
-    data: string; // base64
+    data: string;
   };
+}
+
+export interface AiRequestConfig {
+  apiKey: string;
+  baseUrl?: string;
+  model: string;
+  thinkingBudget?: number;
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class GeminiService {
-  private readonly ai: GoogleGenAI;
+  
+  constructor() {}
 
-  constructor() {
-    // Initialize Gemini Client
-    // process.env.API_KEY is handled by the build environment/runtime
-    this.ai = new GoogleGenAI({ apiKey: process.env['API_KEY'] });
-  }
+  async generateMermaidCode(input: AiInputData, config: AiRequestConfig): Promise<string> {
+    if (!config.apiKey) {
+      throw new Error('API Key is missing. Please configure it in Settings.');
+    }
 
-  async generateMermaidCode(input: AiInputData): Promise<string> {
+    // DEBUGGING: Log the configuration being used
+    console.log('[GeminiService] Initializing request:', {
+      model: config.model,
+      hasApiKey: !!config.apiKey,
+      baseUrl: config.baseUrl ? config.baseUrl : '(Default Google Endpoint)',
+      thinkingBudget: config.thinkingBudget
+    });
+
     try {
-      const model = 'gemini-2.5-flash';
+      // Initialize client with request-specific config
+      const clientOptions: any = { 
+        apiKey: config.apiKey
+      };
       
+      if (config.baseUrl && config.baseUrl.trim().length > 0) {
+        // Strip trailing slash to avoid double slash issues (e.g. proxy.com/ + /v1/...)
+        clientOptions.baseUrl = config.baseUrl.replace(/\/$/, '');
+      }
+
+      const ai = new GoogleGenAI(clientOptions);
+
       let systemInstruction = `
         You are an expert in Mermaid.js diagramming syntax.
         Your task is to generate or update Mermaid.js code based on the user's request.
@@ -37,7 +61,6 @@ export class GeminiService {
         3. Ensure syntax is valid and error-free.
       `;
 
-      // Adjust instruction if we are refining existing code
       if (input.contextCode) {
         systemInstruction += `
         
@@ -67,30 +90,33 @@ export class GeminiService {
         });
       }
 
-      // Fix: contents must be an array of Content objects [{ parts: ... }]
-      // The error "n[Symbol.iterator] is not a function" occurs because the SDK tries to iterate over 'contents'.
-      // We pass an array containing one Content object.
-      const response = await this.ai.models.generateContent({
-        model: model,
+      // Prepare configuration
+      const generationConfig: any = {
+        systemInstruction: systemInstruction,
+        temperature: 0.2,
+      };
+
+      // Handle Thinking Config (Only for supported models like gemini-2.5-flash)
+      if (config.model.includes('gemini-2.5-flash') && config.thinkingBudget && config.thinkingBudget > 0) {
+         generationConfig.thinkingConfig = { thinkingBudget: config.thinkingBudget };
+      }
+
+      const response = await ai.models.generateContent({
+        model: config.model || 'gemini-2.5-flash',
         contents: [{ parts }],
-        config: {
-          systemInstruction: systemInstruction,
-          temperature: 0.2,
-        }
+        config: generationConfig
       });
 
       const rawText = response.text || '';
       return this.cleanResponse(rawText);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Gemini API Error:', error);
-      throw new Error('Failed to generate diagram from AI.');
+      throw new Error(error.message || 'Failed to generate diagram from AI.');
     }
   }
 
   private cleanResponse(text: string): string {
-    // Remove markdown code blocks if the AI includes them despite instructions
     let clean = text.trim();
-    // Remove ```mermaid ... ``` or just ``` ... ```
     clean = clean.replace(/^```(mermaid)?/i, '').replace(/```$/, '');
     return clean.trim();
   }

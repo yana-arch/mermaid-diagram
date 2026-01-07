@@ -7,6 +7,7 @@ import { AppToolbarComponent } from './components/app-toolbar.component';
 import { AiModalComponent } from './components/modals/ai-modal.component';
 import { ExampleModalComponent } from './components/modals/example-modal.component';
 import { ExportModalComponent, ExportFormat } from './components/modals/export-modal.component';
+import { SettingsModalComponent } from './components/modals/settings-modal.component';
 import { CHART_EXAMPLES } from './data/chart-examples';
 
 @Component({
@@ -21,7 +22,8 @@ import { CHART_EXAMPLES } from './data/chart-examples';
     AppToolbarComponent,
     AiModalComponent,
     ExampleModalComponent,
-    ExportModalComponent
+    ExportModalComponent,
+    SettingsModalComponent
   ],
 })
 export class AppComponent {

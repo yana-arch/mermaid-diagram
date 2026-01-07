@@ -2,7 +2,7 @@
 import { Component, ElementRef, inject, input, output, signal, viewChild, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GeminiService, AiInputData } from '../../services/gemini.service';
-import { AiMode } from '../../services/app-state.service';
+import { AiMode, AppStateService } from '../../services/app-state.service';
 
 export type AiTab = 'text' | 'url' | 'file';
 
@@ -20,7 +20,7 @@ export type AiTab = 'text' | 'url' | 'file';
         <!-- Header -->
         <div class="flex justify-between items-center p-4 sm:p-5 border-b border-slate-700 shrink-0">
           <div class="flex items-center gap-2">
-             <svg class="text-indigo-400" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+             <svg class="text-indigo-400" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/></svg>
              <h3 class="text-lg sm:text-xl font-bold text-white">
                @if(mode() === 'refine') { Refine / Fix Chart } @else { Generate with AI }
              </h3>
@@ -159,6 +159,7 @@ export class AiModalComponent {
   fileInstructionInput = viewChild<ElementRef<HTMLTextAreaElement>>('fileInstructionInput');
 
   private geminiService = inject(GeminiService);
+  private store = inject(AppStateService);
 
   constructor() {
     effect(() => {
@@ -182,16 +183,12 @@ export class AiModalComponent {
       if (!res.ok) throw new Error('Fetch failed');
       const text = (await res.text()).slice(0, 100000);
       
-      // Store content temporarily in a way that doesn't mess up the UI, 
-      // effectively simulation file selection for URL content
       this.selectedFile.set({
           name: url,
           type: 'text/html',
           content: text,
           isBase64: false
       });
-      // Visual feedback handled by showing "Attached" or we can just proceed.
-      // For this flow, we will keep it simple and just set it ready for generation.
       this.error.set(null);
     } catch {
       this.error.set('Could not fetch URL (CORS might block this).');
@@ -221,11 +218,17 @@ export class AiModalComponent {
   removeFile() {
     this.selectedFile.set(null);
     if(this.fileInput()?.nativeElement) this.fileInput()!.nativeElement.value = '';
-    // Clear URL temporary file if any
     if(this.urlInput()?.nativeElement) this.urlInput()!.nativeElement.value = '';
   }
 
   async generate() {
+    // Basic validation before starting
+    const aiConfig = this.store.aiConfig();
+    if (!aiConfig.apiKey) {
+      this.error.set('API Key is missing. Please click the Settings (gear icon) to configure it.');
+      return;
+    }
+
     this.isAiLoading.set(true);
     this.error.set(null);
     
@@ -240,9 +243,7 @@ export class AiModalComponent {
             } 
             else if (this.activeTab() === 'url') {
                 const instructions = this.urlInstructionInput()?.nativeElement.value || '';
-                // If we fetched URL content, it's in selectedFile.
                 if (!file) {
-                    // Try fetch if user didn't click fetch but typed url
                     await this.fetchUrl();
                     file = this.selectedFile();
                 }
@@ -268,21 +269,26 @@ export class AiModalComponent {
             if (file.isBase64) {
                 inputData.media = { mimeType: file.type, data: file.content };
             } else {
-                // If text content (from file or URL), append to prompt for robustness
                 inputData.prompt += `\n\n--- Source Content (${file.name}) ---\n${file.content}\n`;
             }
         }
 
-        // Add Context Code (Refine Mode)
         if (this.mode() === 'refine') {
             inputData.contextCode = this.currentCode();
         }
 
-        const code = await this.geminiService.generateMermaidCode(inputData);
+        const useBaseUrl = aiConfig.useCustomUrl && aiConfig.customUrl?.trim().length > 0;
+
+        const code = await this.geminiService.generateMermaidCode(inputData, {
+          apiKey: aiConfig.apiKey,
+          baseUrl: useBaseUrl ? aiConfig.customUrl.trim() : undefined,
+          model: aiConfig.model,
+          thinkingBudget: aiConfig.thinkingBudget
+        });
+
         this.codeGenerated.emit(code);
         this.removeFile();
         
-        // Clean inputs
         if(this.promptInput()?.nativeElement) this.promptInput()!.nativeElement.value = '';
         if(this.urlInstructionInput()?.nativeElement) this.urlInstructionInput()!.nativeElement.value = '';
         if(this.fileInstructionInput()?.nativeElement) this.fileInstructionInput()!.nativeElement.value = '';
