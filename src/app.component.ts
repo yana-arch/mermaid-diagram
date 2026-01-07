@@ -2,7 +2,7 @@
 import { Component, ChangeDetectionStrategy, signal, effect, viewChild, ElementRef, inject, PLATFORM_ID, ViewEncapsulation } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { MermaidService } from './services/mermaid.service';
-import { GeminiService } from './services/gemini.service';
+import { GeminiService, AiInputData } from './services/gemini.service';
 
 declare const Prism: any;
 
@@ -201,6 +201,7 @@ const CHART_EXAMPLES = [
 ];
 
 export type ExportFormat = 'svg' | 'png' | 'jpeg' | 'webp';
+export type AiTab = 'text' | 'url' | 'file';
 
 @Component({
   selector: 'app-root',
@@ -219,7 +220,11 @@ export class AppComponent {
   chartOutput = viewChild.required<ElementRef<HTMLDivElement>>('chartOutput');
   codeEditor = viewChild.required<ElementRef<HTMLElement>>('codeEditor');
   codeContainer = viewChild.required<ElementRef<HTMLPreElement>>('codeContainer');
+  
+  // AI Input Elements
   aiPromptInput = viewChild<ElementRef<HTMLTextAreaElement>>('aiPromptInput');
+  aiUrlInput = viewChild<ElementRef<HTMLInputElement>>('aiUrlInput');
+  fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
 
   readonly themes = ['neutral', 'dark', 'forest', 'default'] as const;
   selectedTheme = signal<(typeof this.themes)[number]>('neutral');
@@ -236,9 +241,15 @@ export class AppComponent {
   mermaidCode = signal<string>(this.initialCode);
   errorMessage = signal<string | null>(null);
   isLoading = signal<boolean>(false);
+  
+  // AI State
   isAiLoading = signal<boolean>(false);
   aiError = signal<string | null>(null);
-
+  activeAiTab = signal<AiTab>('text');
+  
+  // File Upload State
+  selectedFile = signal<{name: string, type: string, content: string, isBase64: boolean} | null>(null);
+  
   // Pan & Zoom State
   zoomScale = signal<number>(1);
   panOffset = signal<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -255,7 +266,6 @@ export class AppComponent {
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
       const savedCode = localStorage.getItem('mermaidCode');
-      // Load saved code, or the initial example if there's no saved code
       this.mermaidCode.set(savedCode || this.initialCode);
 
       const savedTheme = localStorage.getItem('mermaidTheme') as (typeof this.themes)[number];
@@ -274,7 +284,6 @@ export class AppComponent {
         localStorage.setItem('mermaidCode', code);
         localStorage.setItem('mermaidTheme', theme);
 
-        // Syntax highlighting logic
         if (editorElement) {
            editorElement.textContent = code;
            if (typeof Prism !== 'undefined' && Prism.highlightElement) {
@@ -298,8 +307,6 @@ export class AppComponent {
             const svg = await this.mermaidService.render(code, theme);
             outputElement.innerHTML = svg;
             this.errorMessage.set(null);
-            // Reset zoom when code changes significantly or theme changes
-            // Optional: keep zoom level but maybe center it? For now, let's keep user state.
           } catch (e: any) {
             const friendlyMessage = this.parseMermaidError(e);
             this.errorMessage.set(friendlyMessage);
@@ -334,11 +341,11 @@ export class AppComponent {
   // --- Pan & Zoom Logic ---
 
   zoomIn(): void {
-    this.zoomScale.update(s => Math.min(s * 1.2, 5)); // Max zoom 5x
+    this.zoomScale.update(s => Math.min(s * 1.2, 5));
   }
 
   zoomOut(): void {
-    this.zoomScale.update(s => Math.max(s / 1.2, 0.2)); // Min zoom 0.2x
+    this.zoomScale.update(s => Math.max(s / 1.2, 0.2));
   }
 
   resetZoom(): void {
@@ -347,10 +354,8 @@ export class AppComponent {
   }
 
   onMouseDown(event: MouseEvent): void {
-    // Only drag with left mouse button
     if (event.button !== 0) return;
-    
-    event.preventDefault(); // Prevent text selection
+    event.preventDefault();
     this.isPanning.set(true);
     this.dragStart = { x: event.clientX, y: event.clientY };
     this.initialPan = { ...this.panOffset() };
@@ -358,15 +363,10 @@ export class AppComponent {
 
   onMouseMove(event: MouseEvent): void {
     if (!this.isPanning()) return;
-    
     event.preventDefault();
     const dx = event.clientX - this.dragStart.x;
     const dy = event.clientY - this.dragStart.y;
-    
-    this.panOffset.set({
-      x: this.initialPan.x + dx,
-      y: this.initialPan.y + dy
-    });
+    this.panOffset.set({ x: this.initialPan.x + dx, y: this.initialPan.y + dy });
   }
 
   onMouseUp(): void {
@@ -409,11 +409,8 @@ export class AppComponent {
       return;
     }
 
-    // Raster Formats (PNG, JPEG, WEBP)
     const scale = this.exportScale();
     const viewBox = svgElement.viewBox.baseVal;
-    
-    // Fallback if viewBox is missing
     const width = (viewBox?.width || svgElement.clientWidth) * scale;
     const height = (viewBox?.height || svgElement.clientHeight) * scale;
 
@@ -425,8 +422,6 @@ export class AppComponent {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Fill white background for JPEG (transparency turns black otherwise)
-    // or if the user wants a white background generally (optional, but safe for charts)
     if (format === 'jpeg') {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, width, height);
@@ -437,9 +432,8 @@ export class AppComponent {
 
     img.onload = () => {
       ctx.drawImage(img, 0, 0, width, height);
-      
       const mimeType = `image/${format}`;
-      const dataUrl = canvas.toDataURL(mimeType, 0.9); // 0.9 quality for lossy
+      const dataUrl = canvas.toDataURL(mimeType, 0.9);
       
       const a = document.createElement('a');
       a.href = dataUrl;
@@ -447,10 +441,6 @@ export class AppComponent {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-    };
-
-    img.onerror = (err) => {
-      console.error('Failed to load SVG for export.', err);
     };
 
     img.src = dataUrl;
@@ -487,34 +477,155 @@ export class AppComponent {
   openAiModal(): void {
     this.isAiModalOpen.set(true);
     this.aiError.set(null);
-    // Focus happens automatically via autofocus attribute or could be done here with effect
+    this.activeAiTab.set('text');
+    this.selectedFile.set(null);
   }
 
   closeAiModal(): void {
     if (!this.isAiLoading()) {
       this.isAiModalOpen.set(false);
       this.aiError.set(null);
+      this.selectedFile.set(null);
     }
   }
 
-  async generateWithAI(): Promise<void> {
-    const inputEl = this.aiPromptInput()?.nativeElement;
-    const prompt = inputEl?.value;
+  setActiveAiTab(tab: AiTab): void {
+    this.activeAiTab.set(tab);
+    this.aiError.set(null);
+  }
 
-    if (!prompt || !prompt.trim()) return;
+  // --- URL Fetching ---
+  async fetchUrlContent(): Promise<void> {
+    const url = this.aiUrlInput()?.nativeElement.value;
+    if (!url) return;
 
     this.isAiLoading.set(true);
     this.aiError.set(null);
 
     try {
-      const generatedCode = await this.geminiService.generateMermaidCode(prompt);
-      this.mermaidCode.set(generatedCode);
+      // Basic fetch - Limitation: CORS will likely block many random sites
+      // In a real production app, this needs a backend proxy.
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+      
+      const text = await response.text();
+      // Truncate if too massive (Gemini Flash has ~1M tokens, but let's be safe for UI performance)
+      const truncated = text.slice(0, 100000); 
+      
+      // Update the prompt input with this content
+      const promptEl = this.aiPromptInput()?.nativeElement;
+      if (promptEl) {
+        promptEl.value = `Here is the content of ${url}:\n\n${truncated}\n\nCan you generate a diagram representing this?`;
+        this.activeAiTab.set('text'); // Switch back to text view to let user edit
+      }
+    } catch (err) {
+      this.aiError.set(`Could not fetch URL (CORS restricted?). Please copy/paste the text manually.`);
+    } finally {
       this.isAiLoading.set(false);
+    }
+  }
+
+  // --- File Handling ---
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+
+    const file = input.files[0];
+    const reader = new FileReader();
+
+    // Determine strategy based on file type
+    const isImage = file.type.startsWith('image/');
+    const isPdf = file.type === 'application/pdf';
+    const isText = file.type.startsWith('text/') || 
+                   file.name.endsWith('.py') || 
+                   file.name.endsWith('.js') || 
+                   file.name.endsWith('.ts') || 
+                   file.name.endsWith('.java') || 
+                   file.name.endsWith('.cpp') || 
+                   file.name.endsWith('.json') || 
+                   file.name.endsWith('.xml') ||
+                   file.name.endsWith('.sql');
+
+    // Binary types for Multimodal (Images, PDF)
+    if (isImage || isPdf) {
+      reader.onload = () => {
+        const base64String = (reader.result as string).split(',')[1];
+        this.selectedFile.set({
+          name: file.name,
+          type: file.type,
+          content: base64String,
+          isBase64: true
+        });
+      };
+      reader.readAsDataURL(file);
+    } 
+    // Text types for prompt injection
+    else if (isText) {
+      reader.onload = () => {
+        this.selectedFile.set({
+          name: file.name,
+          type: file.type || 'text/plain',
+          content: reader.result as string,
+          isBase64: false
+        });
+      };
+      reader.readAsText(file);
+    } 
+    else {
+      this.aiError.set('Unsupported file type. Please upload Code, Text, Image, or PDF.');
+      input.value = ''; // Reset input
+    }
+  }
+
+  removeSelectedFile(): void {
+    this.selectedFile.set(null);
+    if (this.fileInput()?.nativeElement) {
+      this.fileInput()!.nativeElement.value = '';
+    }
+  }
+
+  async generateWithAI(): Promise<void> {
+    const promptInput = this.aiPromptInput()?.nativeElement;
+    let prompt = promptInput?.value || '';
+    const file = this.selectedFile();
+
+    // If no prompt and no file, error
+    if (!prompt.trim() && !file) {
+        this.aiError.set('Please enter a description or upload a file.');
+        return;
+    }
+
+    this.isAiLoading.set(true);
+    this.aiError.set(null);
+
+    try {
+      const inputData: AiInputData = { prompt };
+
+      if (file) {
+        if (file.isBase64) {
+          // Multimodal Input (Image/PDF)
+          inputData.media = {
+            mimeType: file.type,
+            data: file.content
+          };
+          // If prompt is empty, add a default one for the image
+          if (!prompt.trim()) {
+            inputData.prompt = `Analyze this ${file.type} file and generate a mermaid diagram that represents its structure or flow.`;
+          }
+        } else {
+          // Text File Input -> Append content to prompt
+          inputData.prompt = `${prompt}\n\n--- File: ${file.name} ---\n${file.content}\n\nGenerate a diagram for this code/text.`;
+        }
+      }
+
+      const generatedCode = await this.geminiService.generateMermaidCode(inputData);
+      this.mermaidCode.set(generatedCode);
       this.closeAiModal();
       this.resetZoom();
     } catch (err) {
-      this.isAiLoading.set(false);
       this.aiError.set('Failed to generate chart. Please try again or check your API Key.');
+    } finally {
+      this.isAiLoading.set(false);
     }
   }
 
