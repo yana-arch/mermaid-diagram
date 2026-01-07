@@ -1,6 +1,6 @@
 
 import { Component, ChangeDetectionStrategy, viewChild, inject, ViewEncapsulation } from '@angular/core';
-import { AppStateService } from './services/app-state.service';
+import { AppStateService, HistoryItem } from './services/app-state.service';
 import { CodeEditorComponent } from './components/code-editor.component';
 import { ChartPreviewComponent } from './components/chart-preview.component';
 import { AppToolbarComponent } from './components/app-toolbar.component';
@@ -8,6 +8,7 @@ import { AiModalComponent } from './components/modals/ai-modal.component';
 import { ExampleModalComponent } from './components/modals/example-modal.component';
 import { ExportModalComponent, ExportFormat } from './components/modals/export-modal.component';
 import { SettingsModalComponent } from './components/modals/settings-modal.component';
+import { HistoryModalComponent } from './components/modals/history-modal.component';
 import { CHART_EXAMPLES } from './data/chart-examples';
 
 @Component({
@@ -23,7 +24,8 @@ import { CHART_EXAMPLES } from './data/chart-examples';
     AiModalComponent,
     ExampleModalComponent,
     ExportModalComponent,
-    SettingsModalComponent
+    SettingsModalComponent,
+    HistoryModalComponent
   ],
 })
 export class AppComponent {
@@ -51,6 +53,13 @@ export class AppComponent {
   handleExampleLoad(code: string) {
     this.store.setCode(code);
     this.store.isExampleModalOpen.set(false);
+    this.previewComponent()?.resetZoom();
+    // Switch to preview tab on mobile to see result
+    this.store.setMobileTab('preview');
+  }
+
+  handleHistoryLoad(item: HistoryItem) {
+    this.store.loadFromHistory(item);
     this.previewComponent()?.resetZoom();
     // Switch to preview tab on mobile to see result
     this.store.setMobileTab('preview');

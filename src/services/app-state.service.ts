@@ -16,6 +16,13 @@ export interface AiConfig {
   apiVersion: string;
 }
 
+export interface HistoryItem {
+  id: string;
+  timestamp: number;
+  code: string;
+  label?: string;
+}
+
 const INITIAL_CODE = `graph TD
     A[Start] --> B{Is it responsive?};
     B -- Yes --> C[Looks great on mobile!];
@@ -49,6 +56,10 @@ export class AppStateService {
   // AI Config
   readonly aiConfig = signal<AiConfig>(DEFAULT_AI_CONFIG);
 
+  // History State
+  readonly history = signal<HistoryItem[]>([]);
+  readonly isHistoryModalOpen = signal(false);
+
   // Modal State Signals
   readonly isAiModalOpen = signal(false);
   readonly aiModalMode = signal<AiMode>('generate');
@@ -81,6 +92,15 @@ export class AppStateService {
         } catch (e) {
           console.error('Failed to parse AI config', e);
         }
+      }
+
+      const savedHistory = localStorage.getItem('mermaidHistory');
+      if (savedHistory) {
+        try {
+          this.history.set(JSON.parse(savedHistory));
+        } catch (e) {
+          console.error('Failed to parse history', e);
+        }
       } else {
         // Try to check if env var is available (in some build setups)
         // Check if process is defined (Node.js/Build time) before accessing it
@@ -110,8 +130,32 @@ export class AppStateService {
         localStorage.setItem('mermaidCode', this.mermaidCode());
         localStorage.setItem('mermaidTheme', this.theme());
         localStorage.setItem('mermaidAiConfig', JSON.stringify(this.aiConfig()));
+        localStorage.setItem('mermaidHistory', JSON.stringify(this.history()));
       });
     }
+  }
+
+  addToHistory(label?: string) {
+    const code = this.mermaidCode();
+    if (!code.trim()) return;
+
+    const newItem: HistoryItem = {
+      id: crypto.randomUUID(),
+      timestamp: Date.now(),
+      code,
+      label: label || `Snapshot ${new Date().toLocaleTimeString()}`
+    };
+
+    this.history.update(h => [newItem, ...h]);
+  }
+
+  deleteFromHistory(id: string) {
+    this.history.update(h => h.filter(item => item.id !== id));
+  }
+
+  loadFromHistory(item: HistoryItem) {
+    this.setCode(item.code);
+    this.isHistoryModalOpen.set(false);
   }
 
   openAiModal(mode: AiMode) {

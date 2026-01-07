@@ -72,6 +72,18 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
               <span class="hidden sm:inline">Examples</span>
             </button>
+
+            <div class="w-px bg-slate-700 mx-1"></div>
+
+            <button (click)="store.addToHistory()" class="text-xs bg-slate-700 hover:bg-slate-600 transition-colors px-2 sm:px-3 py-1.5 rounded-md flex items-center gap-1.5 border border-slate-600" title="Save to History">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+              <span class="hidden sm:inline">Save</span>
+            </button>
+
+            <button (click)="store.isHistoryModalOpen.set(true)" class="text-xs bg-slate-700 hover:bg-slate-600 transition-colors px-2 sm:px-3 py-1.5 rounded-md flex items-center gap-1.5 border border-slate-600" title="View History">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <span class="hidden sm:inline">History</span>
+            </button>
           </div>
         </app-code-editor>
       </div>
@@ -138,4 +150,12 @@
     [isOpen]="store.isSettingsModalOpen()"
     (close)="store.isSettingsModalOpen.set(false)"
   ></app-settings-modal>
+
+  <app-history-modal
+    [isOpen]="store.isHistoryModalOpen()"
+    [history]="store.history()"
+    (close)="store.isHistoryModalOpen.set(false)"
+    (load)="handleHistoryLoad($event)"
+    (delete)="store.deleteFromHistory($event)"
+  ></app-history-modal>
 </main>
