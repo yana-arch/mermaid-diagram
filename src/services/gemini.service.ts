@@ -3,7 +3,8 @@ import { Injectable } from '@angular/core';
 import { GoogleGenAI } from "@google/genai";
 
 export interface AiInputData {
-  prompt: string;
+  prompt: string; // User instructions
+  contextCode?: string; // Existing Mermaid code (for Refine/Fix mode)
   media?: {
     mimeType: string;
     data: string; // base64
@@ -26,17 +27,34 @@ export class GeminiService {
     try {
       const model = 'gemini-2.5-flash';
       
-      const systemInstruction = `
+      let systemInstruction = `
         You are an expert in Mermaid.js diagramming syntax.
-        Your task is to convert the user's request (which may include code files, documents, or images) into valid Mermaid.js code.
+        Your task is to generate or update Mermaid.js code based on the user's request.
         
         Rules:
         1. Return ONLY the code. Do not include markdown code fences (like \`\`\`mermaid).
         2. Do not include explanations or conversational text.
-        3. If the user provides code (Python, Java, SQL, etc.), analyze the logic/schema and generate a relevant diagram (Class Diagram, ERD, Flowchart).
-        4. If the user provides an image/PDF, analyze the visual structure and replicate it in Mermaid.
-        5. Ensure syntax is valid and error-free.
+        3. Ensure syntax is valid and error-free.
       `;
+
+      // Adjust instruction if we are refining existing code
+      if (input.contextCode) {
+        systemInstruction += `
+        
+        CONTEXT - EXISTING CODE:
+        The user wants to MODIFY the following existing code:
+        ----------------
+        ${input.contextCode}
+        ----------------
+        
+        Perform the requested changes to this specific code. Keep the existing structure unless asked to change it.
+        `;
+      } else {
+        systemInstruction += `
+        If the user provides code (Python, Java, etc.), analyze logic and generate a relevant diagram.
+        If the user provides an image/PDF, analyze visual structure and replicate it in Mermaid.
+        `;
+      }
 
       const parts: any[] = [{ text: input.prompt }];
 
@@ -51,7 +69,7 @@ export class GeminiService {
 
       const response = await this.ai.models.generateContent({
         model: model,
-        contents: { parts }, // Correct structure for multimodal
+        contents: { parts },
         config: {
           systemInstruction: systemInstruction,
           temperature: 0.2,
@@ -69,10 +87,8 @@ export class GeminiService {
   private cleanResponse(text: string): string {
     // Remove markdown code blocks if the AI includes them despite instructions
     let clean = text.trim();
-    
     // Remove ```mermaid ... ``` or just ``` ... ```
     clean = clean.replace(/^```(mermaid)?/i, '').replace(/```$/, '');
-    
     return clean.trim();
   }
 }

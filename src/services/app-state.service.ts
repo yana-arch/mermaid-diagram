@@ -4,6 +4,7 @@ import { isPlatformBrowser } from '@angular/common';
 
 const THEMES = ['neutral', 'dark', 'forest', 'default'] as const;
 export type Theme = (typeof THEMES)[number];
+export type AiMode = 'generate' | 'refine';
 
 const INITIAL_CODE = `graph TD
     A[Start] --> B{Is it responsive?};
@@ -25,6 +26,8 @@ export class AppStateService {
   
   // Modal State Signals
   readonly isAiModalOpen = signal(false);
+  readonly aiModalMode = signal<AiMode>('generate'); // New signal to track mode
+  
   readonly isExampleModalOpen = signal(false);
   readonly isExportModalOpen = signal(false);
 
@@ -50,6 +53,11 @@ export class AppStateService {
         localStorage.setItem('mermaidTheme', this.theme());
       });
     }
+  }
+
+  openAiModal(mode: AiMode) {
+    this.aiModalMode.set(mode);
+    this.isAiModalOpen.set(true);
   }
 
   setCode(code: string) {
