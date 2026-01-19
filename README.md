@@ -10,7 +10,12 @@
 
 **A professional, AI-powered tool for creating, visualizing, and managing Mermaid diagrams on any device.**
 
-[Live Demo](https://ai.studio/apps/drive/1NeBj8DIF0CRy70Wsb2JCTwMhbRs4Yda0) • [Report Bug](https://github.com/yana-arch/mermaid-diagram/issues) • [Request Feature](https://github.com/yana-arch/mermaid-diagram/issues)
+<div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
+  <img src="https://github.com/user-attachments/assets/6f54ee98-b6ee-4aac-a301-21ca55c2e095" width="70%" />
+  <img src="https://github.com/user-attachments/assets/37dc80d6-d40d-47e8-ba37-44ce97d0bdc6" width="28%" />
+</div>
+
+[Live Demo]([https://ai.studio/apps/drive/1NeBj8DIF0CRy70Wsb2JCTwMhbRs4Yda0](https://mermaid-diagram.vercel.app/)) • [Report Bug](https://github.com/yana-arch/mermaid-diagram/issues) • [Request Feature](https://github.com/yana-arch/mermaid-diagram/issues)
 
 </div>
 
