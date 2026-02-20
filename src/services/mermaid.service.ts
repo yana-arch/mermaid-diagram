@@ -38,7 +38,10 @@ export class MermaidService {
       }
 
       // Update theme configuration before render.
-      mermaid.initialize({ theme });
+      mermaid.initialize({ 
+        theme,
+        suppressErrorRendering: true // Ensure error rendering is suppressed when theme changes
+      });
 
       const graphId = `mermaid-graph-${this.generateId()}`;
       

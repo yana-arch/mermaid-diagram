@@ -18,3 +18,8 @@
 .animate-fade-in { animation: fadeIn 0.2s ease-out; }
 .animate-scale-in { animation: scaleIn 0.2s ease-out; }
 .animate-slide-up { animation: slideUp 0.3s ease-out; }
+
+/* Hide Mermaid's default error banner (fallback) */
+.error-icon, .error-text, [id^="d-mermaid-error"] {
+  display: none !important;
+}
