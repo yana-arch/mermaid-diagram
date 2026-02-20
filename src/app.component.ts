@@ -17,6 +17,9 @@ import { CHART_EXAMPLES } from './data/chart-examples';
   styleUrls: ['./app.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
+  host: {
+    '[class]': '"block min-h-screen theme-" + store.theme()'
+  },
   imports: [
     CodeEditorComponent, 
     ChartPreviewComponent, 

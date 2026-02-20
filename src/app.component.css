@@ -1,4 +1,111 @@
 
+/* Theme Variables - Default (Dark Slate) */
+:root {
+  --bg-main: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-panel: #1e293b;
+  --border-color: #334155;
+  --text-main: #e2e8f0;
+  --text-muted: #94a3b8;
+  --accent-primary: #4f46e5;
+  --accent-secondary: #06b6d4;
+  --btn-bg: #334155;
+  --btn-hover: #475569;
+}
+
+/* Theme: Light / Neutral */
+.theme-neutral {
+  --bg-main: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-panel: #ffffff;
+  --border-color: #e2e8f0;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --accent-primary: #2563eb;
+  --accent-secondary: #0ea5e9;
+  --btn-bg: #f1f5f9;
+  --btn-hover: #e2e8f0;
+}
+
+/* Theme: Minimal (High Contrast Monochrome) */
+.theme-minimal {
+  --bg-main: #ffffff;
+  --bg-secondary: #ffffff;
+  --bg-panel: #ffffff;
+  --border-color: #000000;
+  --text-main: #000000;
+  --text-muted: #404040;
+  --accent-primary: #000000;
+  --accent-secondary: #404040;
+  --btn-bg: #ffffff;
+  --btn-hover: #f3f4f6;
+}
+
+/* Theme: Forest */
+.theme-forest {
+  --bg-main: #052e16;
+  --bg-secondary: #064e3b;
+  --bg-panel: #064e3b;
+  --border-color: #065f46;
+  --text-main: #ecfccb;
+  --text-muted: #a3e635;
+  --accent-primary: #10b981;
+  --accent-secondary: #34d399;
+  --btn-bg: #065f46;
+  --btn-hover: #047857;
+}
+
+/* Theme: Cyberpunk */
+.theme-cyberpunk {
+  --bg-main: #090014;
+  --bg-secondary: #1a0033;
+  --bg-panel: #1a0033;
+  --border-color: #ff00ff;
+  --text-main: #00ffff;
+  --text-muted: #d946ef;
+  --accent-primary: #ff00ff;
+  --accent-secondary: #00ffff;
+  --btn-bg: #330066;
+  --btn-hover: #5500aa;
+}
+
+/* Theme: Ocean */
+.theme-ocean {
+  --bg-main: #083344;
+  --bg-secondary: #164e63;
+  --bg-panel: #164e63;
+  --border-color: #0891b2;
+  --text-main: #cffafe;
+  --text-muted: #67e8f9;
+  --accent-primary: #06b6d4;
+  --accent-secondary: #22d3ee;
+  --btn-bg: #155e75;
+  --btn-hover: #0e7490;
+}
+
+/* Theme: Sunset */
+.theme-sunset {
+  --bg-main: #451a03;
+  --bg-secondary: #7c2d12;
+  --bg-panel: #7c2d12;
+  --border-color: #fb923c;
+  --text-main: #ffedd5;
+  --text-muted: #fdba74;
+  --accent-primary: #f97316;
+  --accent-secondary: #fbbf24;
+  --btn-bg: #9a3412;
+  --btn-hover: #c2410c;
+}
+
+/* Utility classes mapping to variables */
+.app-bg-main { background-color: var(--bg-main); color: var(--text-main); }
+.app-bg-secondary { background-color: var(--bg-secondary); }
+.app-border { border-color: var(--border-color); }
+.app-text-main { color: var(--text-main); }
+.app-text-muted { color: var(--text-muted); }
+.app-btn { background-color: var(--btn-bg); color: var(--text-main); }
+.app-btn:hover { background-color: var(--btn-hover); }
+
 /* Animations for Modals */
 @keyframes fadeIn {
   from { opacity: 0; }

@@ -14,7 +14,7 @@ import { MermaidService } from '../services/mermaid.service';
   template: `
     <div class="flex flex-col h-full">
       <div class="flex flex-wrap gap-4 justify-between items-center mb-2 shrink-0">
-        <h2 class="text-sm font-medium text-slate-300">Live Preview</h2>
+        <h2 class="text-sm font-medium app-text-main">Live Preview</h2>
         <ng-content select="[controls]"></ng-content>
       </div>
 
@@ -25,7 +25,7 @@ import { MermaidService } from '../services/mermaid.service';
         </div>
       }
 
-      <div class="flex-1 min-h-0 border border-slate-700 rounded-lg overflow-hidden relative select-none transition-all duration-300"
+      <div class="flex-1 min-h-0 border app-border rounded-lg overflow-hidden relative select-none transition-all duration-300"
            [ngClass]="containerClass()">
         <!-- Controls Container -->
         <div class="absolute bottom-4 right-4 z-20 flex flex-col gap-2">
@@ -111,21 +111,35 @@ export class ChartPreviewComponent {
       case 'cyberpunk': return 'bg-[#090014] border-fuchsia-900/50 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/20 via-[#090014] to-[#090014]';
       case 'ocean': return 'bg-gradient-to-b from-cyan-950 to-blue-950 border-cyan-900/30';
       case 'sunset': return 'bg-gradient-to-br from-orange-50 to-rose-50 border-orange-200';
-      case 'minimal': return 'bg-white border-slate-200';
-      default: return 'bg-white border-slate-200'; // neutral, default
+      case 'minimal': return 'bg-white border-black border-2';
+      // Default: rely on global CSS variable classes 'app-bg-secondary'
+      default: return 'app-bg-secondary'; 
     }
   });
 
   controlsClass = computed(() => {
-    if (['dark', 'forest', 'cyberpunk', 'ocean'].includes(this.theme())) {
+    // If we are in a darkish theme, keep controls dark
+    if (['default', 'dark', 'forest', 'cyberpunk', 'ocean'].includes(this.theme())) {
        return 'bg-slate-800/90 border-slate-600';
     }
-    return 'bg-white/90 border-slate-200';
+    // Minimal specific
+    if (this.theme() === 'minimal') {
+      return 'bg-white border-black border-2 shadow-none';
+    }
+    // If explicit light theme
+    if (['neutral', 'sunset'].includes(this.theme())) {
+        return 'bg-white/90 border-slate-200';
+    }
+    // Default fallback
+    return 'app-bg-panel border-opacity-50 app-border'; 
   });
 
   buttonClass = computed(() => {
-     if (['dark', 'forest', 'cyberpunk', 'ocean'].includes(this.theme())) {
+     if (['default', 'dark', 'forest', 'cyberpunk', 'ocean'].includes(this.theme())) {
        return 'text-slate-200 hover:text-sky-400 hover:bg-slate-700';
+    }
+    if (this.theme() === 'minimal') {
+      return 'text-black hover:bg-gray-100';
     }
     return 'text-slate-600 hover:text-indigo-600 hover:bg-slate-100';
   });

@@ -14,8 +14,8 @@ declare const Prism: any;
   template: `
     <div class="flex justify-between items-center mb-2 shrink-0">
       <div class="flex items-center gap-3">
-        <label for="mermaid-code" class="text-sm font-medium text-slate-300">Mermaid Code Editor</label>
-        <button (click)="copyCode()" class="text-xs text-slate-400 hover:text-white transition-colors flex items-center justify-center p-1 rounded hover:bg-slate-700" [title]="copyText()">
+        <label for="mermaid-code" class="text-sm font-medium app-text-main">Mermaid Code Editor</label>
+        <button (click)="copyCode()" class="text-xs app-text-muted hover:text-[var(--text-main)] transition-colors flex items-center justify-center p-1 rounded hover:bg-[var(--bg-secondary)]" [title]="copyText()">
           @if(isCopied()) {
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-emerald-400"><polyline points="20 6 9 17 4 12"></polyline></svg>
           } @else {
@@ -25,11 +25,11 @@ declare const Prism: any;
       </div>
       <ng-content select="[actions]"></ng-content>
     </div>
-    <div class="editor-container relative flex-1 w-full min-h-0 bg-slate-800/50 border border-slate-700 rounded-lg overflow-hidden">
+    <div class="editor-container relative flex-1 w-full min-h-0 app-bg-secondary bg-opacity-50 border app-border rounded-lg overflow-hidden transition-colors duration-300">
       <textarea 
         #textarea
         id="mermaid-code"
-        class="editor-layer editor-textarea absolute inset-0 w-full h-full focus:outline-none"
+        class="editor-layer editor-textarea absolute inset-0 w-full h-full focus:outline-none app-text-main"
         [value]="code()"
         (input)="onInput($event)"
         (scroll)="onScroll($event)"

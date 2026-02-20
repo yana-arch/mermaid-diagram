@@ -89,7 +89,12 @@ export class MermaidService {
       return configs[themeName];
     }
 
-    // Fallback for built-in themes (neutral, dark, forest, default)
+    // Special handling for 'default' to match the Dark UI
+    if (themeName === 'default') {
+      return { baseTheme: 'dark' };
+    }
+
+    // Fallback for built-in themes (neutral, dark, forest)
     return { baseTheme: themeName };
   }
 
