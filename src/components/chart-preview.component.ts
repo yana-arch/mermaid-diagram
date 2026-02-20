@@ -26,17 +26,30 @@ import { MermaidService } from '../services/mermaid.service';
       }
 
       <div class="flex-1 min-h-0 bg-white border border-slate-700 rounded-lg overflow-hidden relative select-none">
-        <!-- Zoom Controls -->
-        <div class="absolute bottom-4 right-4 z-20 flex flex-col gap-2 bg-slate-800/90 backdrop-blur-sm p-2 rounded-lg border border-slate-600 shadow-xl">
-          <button (click)="zoomIn()" class="p-1.5 text-slate-200 hover:text-sky-400 hover:bg-slate-700 rounded transition">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-          </button>
-          <button (click)="resetZoom()" class="p-1.5 text-slate-200 hover:text-sky-400 hover:bg-slate-700 rounded transition">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
-          </button>
-          <button (click)="zoomOut()" class="p-1.5 text-slate-200 hover:text-sky-400 hover:bg-slate-700 rounded transition">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-          </button>
+        <!-- Controls Container -->
+        <div class="absolute bottom-4 right-4 z-20 flex flex-col gap-2">
+          <!-- Actions -->
+          <div class="flex flex-col gap-1 bg-slate-800/90 backdrop-blur-sm p-1.5 rounded-lg border border-slate-600 shadow-xl">
+             <button (click)="copySvg()" class="p-1.5 text-slate-200 hover:text-emerald-400 hover:bg-slate-700 rounded transition flex justify-center items-center" [title]="copyText()">
+               @if(isCopied()) {
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-emerald-400"><polyline points="20 6 9 17 4 12"></polyline></svg>
+               } @else {
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+               }
+             </button>
+          </div>
+          <!-- Zoom Controls -->
+          <div class="flex flex-col gap-1 bg-slate-800/90 backdrop-blur-sm p-1.5 rounded-lg border border-slate-600 shadow-xl">
+            <button (click)="zoomIn()" class="p-1.5 text-slate-200 hover:text-sky-400 hover:bg-slate-700 rounded transition flex justify-center items-center" title="Zoom In">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+            </button>
+            <button (click)="resetZoom()" class="p-1.5 text-slate-200 hover:text-sky-400 hover:bg-slate-700 rounded transition flex justify-center items-center" title="Reset Zoom">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+            </button>
+            <button (click)="zoomOut()" class="p-1.5 text-slate-200 hover:text-sky-400 hover:bg-slate-700 rounded transition flex justify-center items-center" title="Zoom Out">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+            </button>
+          </div>
         </div>
 
         <!-- Pannable Container -->
@@ -79,6 +92,8 @@ export class ChartPreviewComponent {
   chartOutput = viewChild.required<ElementRef<HTMLDivElement>>('chartOutput');
   
   error = signal<string | null>(null);
+  isCopied = signal(false);
+  copyText = signal('Copy SVG Code');
   
   // Pan & Zoom
   zoomScale = signal(1);
@@ -128,6 +143,24 @@ export class ChartPreviewComponent {
   // API for Parent to call
   public getSvgElement(): SVGSVGElement | null {
     return this.chartOutput().nativeElement.querySelector('svg');
+  }
+
+  async copySvg() {
+    const svgEl = this.getSvgElement();
+    if (!svgEl || !isPlatformBrowser(this.platformId)) return;
+    
+    try {
+      const svgData = new XMLSerializer().serializeToString(svgEl);
+      await navigator.clipboard.writeText(svgData);
+      this.isCopied.set(true);
+      this.copyText.set('Copied!');
+      setTimeout(() => {
+        this.isCopied.set(false);
+        this.copyText.set('Copy SVG Code');
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy SVG', err);
+    }
   }
 
   // Pan Zoom Logic

@@ -40,35 +40,9 @@ export class GeminiService {
       thinkingBudget: config.thinkingBudget
     });
 
+    const systemInstruction = this.getSystemInstruction(input.contextCode);
+
     try {
-      let systemInstruction = `
-        You are an expert in Mermaid.js diagramming syntax.
-        Your task is to generate or update Mermaid.js code based on the user's request.
-        
-        Rules:
-        1. Return ONLY the code. Do not include markdown code fences (like \`\`\`mermaid).
-        2. Do not include explanations or conversational text.
-        3. Ensure syntax is valid and error-free.
-      `;
-
-      if (input.contextCode) {
-        systemInstruction += `
-        
-        CONTEXT - EXISTING CODE:
-        The user wants to MODIFY the following existing code:
-        ----------------
-        ${input.contextCode}
-        ----------------
-        
-        Perform the requested changes to this specific code. Keep the existing structure unless asked to change it.
-        `;
-      } else {
-        systemInstruction += `
-        If the user provides code (Python, Java, etc.), analyze logic and generate a relevant diagram.
-        If the user provides an image/PDF, analyze visual structure and replicate it in Mermaid.
-        `;
-      }
-
       const parts: any[] = [{ text: input.prompt }];
 
       if (input.media) {
@@ -92,7 +66,7 @@ export class GeminiService {
 
       // USE FETCH FOR CUSTOM URL (Bypass SDK)
       if (config.useCustomUrl && config.baseUrl && config.baseUrl.trim().length > 0) {
-          return this.generateWithFetch(config, systemInstruction, parts, generationConfig);
+          return this.retry(() => this.generateWithFetch(config, systemInstruction, parts, generationConfig));
       }
 
       // USE SDK FOR STANDARD CALLS
@@ -106,13 +80,16 @@ export class GeminiService {
 
       const ai = new GoogleGenAI(clientOptions);
 
-      const response = await ai.models.generateContent({
-        model: config.model || 'gemini-2.5-flash',
-        contents: [{ parts }],
-        config: {
-            ...generationConfig,
-            systemInstruction: systemInstruction
-        }
+      const response = await this.retry(async () => {
+        const result = await ai.models.generateContent({
+          model: config.model || 'gemini-2.5-flash',
+          contents: [{ parts }],
+          config: {
+              ...generationConfig,
+              systemInstruction: systemInstruction
+          }
+        });
+        return result;
       });
 
       const rawText = response.text || '';
@@ -120,6 +97,51 @@ export class GeminiService {
     } catch (error: any) {
       console.error('Gemini API Error:', error);
       throw new Error(error.message || 'Failed to generate diagram from AI.');
+    }
+  }
+
+  private getSystemInstruction(contextCode?: string): string {
+    let instruction = `
+      You are an expert in Mermaid.js diagramming syntax.
+      Your task is to generate or update Mermaid.js code based on the user's request.
+      
+      Rules:
+      1. Return ONLY the code. Do not include markdown code fences (like \`\`\`mermaid).
+      2. Do not include explanations or conversational text.
+      3. Ensure syntax is valid and error-free.
+    `;
+
+    if (contextCode) {
+      instruction += `
+      
+      CONTEXT - EXISTING CODE:
+      The user wants to MODIFY the following existing code:
+      ----------------
+      ${contextCode}
+      ----------------
+      
+      Perform the requested changes to this specific code. Keep the existing structure unless asked to change it.
+      `;
+    } else {
+      instruction += `
+      If the user provides code (Python, Java, etc.), analyze logic and generate a relevant diagram.
+      If the user provides an image/PDF, analyze visual structure and replicate it in Mermaid.
+      `;
+    }
+    return instruction;
+  }
+
+  private async retry<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> {
+    try {
+      return await fn();
+    } catch (error: any) {
+      const status = error.status || error.response?.status;
+      if (retries > 0 && (status === 429 || status >= 500 || error.message?.includes('fetch failed'))) {
+        console.warn(`[GeminiService] Retrying... (${retries} left)`);
+        await new Promise(res => setTimeout(res, delay));
+        return this.retry(fn, retries - 1, delay * 2);
+      }
+      throw error;
     }
   }
 

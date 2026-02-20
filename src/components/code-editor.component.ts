@@ -1,5 +1,5 @@
 
-import { Component, ElementRef, ViewEncapsulation, input, output, viewChild, effect, inject, PLATFORM_ID } from '@angular/core';
+import { Component, ElementRef, ViewEncapsulation, input, output, viewChild, effect, inject, PLATFORM_ID, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 
 declare const Prism: any;
@@ -13,7 +13,16 @@ declare const Prism: any;
   },
   template: `
     <div class="flex justify-between items-center mb-2 shrink-0">
-      <label for="mermaid-code" class="text-sm font-medium text-slate-300">Mermaid Code Editor</label>
+      <div class="flex items-center gap-3">
+        <label for="mermaid-code" class="text-sm font-medium text-slate-300">Mermaid Code Editor</label>
+        <button (click)="copyCode()" class="text-xs text-slate-400 hover:text-white transition-colors flex items-center justify-center p-1 rounded hover:bg-slate-700" [title]="copyText()">
+          @if(isCopied()) {
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-emerald-400"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          }
+        </button>
+      </div>
       <ng-content select="[actions]"></ng-content>
     </div>
     <div class="editor-container relative flex-1 w-full min-h-0 bg-slate-800/50 border border-slate-700 rounded-lg overflow-hidden">
@@ -74,6 +83,9 @@ export class CodeEditorComponent {
   pre = viewChild.required<ElementRef<HTMLPreElement>>('pre');
   codeEl = viewChild.required<ElementRef<HTMLElement>>('codeEl');
 
+  isCopied = signal(false);
+  copyText = signal('Copy code');
+
   private platformId = inject(PLATFORM_ID);
 
   constructor() {
@@ -98,5 +110,20 @@ export class CodeEditorComponent {
     const pre = this.pre().nativeElement;
     pre.scrollTop = target.scrollTop;
     pre.scrollLeft = target.scrollLeft;
+  }
+
+  async copyCode() {
+    if (!isPlatformBrowser(this.platformId)) return;
+    try {
+      await navigator.clipboard.writeText(this.code());
+      this.isCopied.set(true);
+      this.copyText.set('Copied!');
+      setTimeout(() => {
+        this.isCopied.set(false);
+        this.copyText.set('Copy code');
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy', err);
+    }
   }
 }

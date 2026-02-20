@@ -59,6 +59,7 @@ export type AiTab = 'text' | 'url' | 'file';
                    <input #urlInput type="url" class="flex-1 bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="https://example.com/docs" [disabled]="isAiLoading()"/>
                    <button (click)="fetchUrl()" [disabled]="isAiLoading()" class="bg-slate-700 hover:bg-slate-600 text-white font-medium px-4 py-2 sm:py-0 rounded-lg border border-slate-600 transition-colors">Fetch</button>
                  </div>
+                 <p class="text-xs text-slate-500 mt-1">Note: Many websites block direct access (CORS). If fetching fails, please copy/paste the content into the "Describe" tab.</p>
                </div>
                <div>
                   <label class="block text-sm font-medium text-slate-300 mb-2">Additional Instructions <span class="text-slate-500 font-normal">(Optional)</span></label>
@@ -191,7 +192,7 @@ export class AiModalComponent {
       });
       this.error.set(null);
     } catch {
-      this.error.set('Could not fetch URL (CORS might block this).');
+      this.error.set('Could not fetch URL. This is likely due to CORS restrictions on the target website. Please copy the text content manually.');
     } finally {
       this.isAiLoading.set(false);
     }
