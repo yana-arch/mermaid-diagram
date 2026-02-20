@@ -2,7 +2,7 @@
 import { Injectable, signal, effect, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 
-const THEMES = ['neutral', 'dark', 'forest', 'default'] as const;
+const THEMES = ['default', 'neutral', 'dark', 'forest', 'cyberpunk', 'ocean', 'sunset', 'minimal'] as const;
 export type Theme = (typeof THEMES)[number];
 export type AiMode = 'generate' | 'refine';
 export type MobileTab = 'editor' | 'preview';
@@ -48,7 +48,7 @@ export class AppStateService {
 
   // State Signals
   readonly mermaidCode = signal<string>(INITIAL_CODE);
-  readonly theme = signal<Theme>('neutral');
+  readonly theme = signal<Theme>('default');
   
   // UI State
   readonly mobileTab = signal<MobileTab>('editor');

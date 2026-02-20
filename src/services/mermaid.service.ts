@@ -3,6 +3,11 @@ import { Injectable } from '@angular/core';
 
 declare const mermaid: any;
 
+export interface MermaidThemeConfig {
+  baseTheme: string;
+  variables?: Record<string, string>;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -27,6 +32,67 @@ export class MermaidService {
     });
   }
 
+  private getThemeConfig(themeName: string): MermaidThemeConfig {
+    const configs: Record<string, MermaidThemeConfig> = {
+      cyberpunk: {
+        baseTheme: 'dark',
+        variables: {
+          primaryColor: '#ff00ff',
+          primaryTextColor: '#00ffff',
+          primaryBorderColor: '#ff00ff',
+          lineColor: '#00ffff',
+          secondaryColor: '#1a0033',
+          tertiaryColor: '#330066',
+          fontFamily: '"Courier New", monospace',
+          mainBkg: '#090014',
+          nodeBorder: '#ff00ff'
+        }
+      },
+      ocean: {
+        baseTheme: 'base',
+        variables: {
+          primaryColor: '#006994',
+          primaryTextColor: '#e0f7fa',
+          primaryBorderColor: '#4dd0e1',
+          lineColor: '#80deea',
+          secondaryColor: '#0097a7',
+          tertiaryColor: '#00bcd4',
+          fontFamily: 'Inter, sans-serif'
+        }
+      },
+      sunset: {
+        baseTheme: 'base',
+        variables: {
+          primaryColor: '#ff6b6b',
+          primaryTextColor: '#2d3436',
+          primaryBorderColor: '#ffd93d',
+          lineColor: '#ff9f43',
+          secondaryColor: '#f9c74f',
+          tertiaryColor: '#90be6d'
+        }
+      },
+      minimal: {
+        baseTheme: 'base',
+        variables: {
+          primaryColor: '#ffffff',
+          primaryTextColor: '#1a1a1a',
+          primaryBorderColor: '#1a1a1a',
+          lineColor: '#1a1a1a',
+          secondaryColor: '#f3f4f6',
+          tertiaryColor: '#e5e7eb',
+          fontFamily: 'Inter, sans-serif'
+        }
+      }
+    };
+
+    if (configs[themeName]) {
+      return configs[themeName];
+    }
+
+    // Fallback for built-in themes (neutral, dark, forest, default)
+    return { baseTheme: themeName };
+  }
+
   public async render(code: string, theme: string): Promise<string> {
     if (!code?.trim()) {
       return '';
@@ -38,9 +104,12 @@ export class MermaidService {
       }
 
       // Update theme configuration before render.
+      const config = this.getThemeConfig(theme);
+      
       mermaid.initialize({ 
-        theme,
-        suppressErrorRendering: true // Ensure error rendering is suppressed when theme changes
+        theme: config.baseTheme,
+        themeVariables: config.variables,
+        suppressErrorRendering: true 
       });
 
       const graphId = `mermaid-graph-${this.generateId()}`;
