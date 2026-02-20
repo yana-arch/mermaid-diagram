@@ -20,6 +20,11 @@ export interface AiRequestConfig {
   apiVersion?: string;
 }
 
+export interface AiModelInfo {
+  id: string;
+  displayName: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -190,23 +195,31 @@ export class GeminiService {
       }
   }
 
-  async listModels(config: AiRequestConfig): Promise<string[]> {
-      if (!config.useCustomUrl || !config.baseUrl) {
-          return [];
-      }
+  async listModels(config: AiRequestConfig): Promise<AiModelInfo[]> {
+      let baseUrl = config.useCustomUrl && config.baseUrl ? config.baseUrl : 'https://generativelanguage.googleapis.com';
       
       const apiVersion = config.apiVersion || 'v1beta';
-      const baseUrl = config.baseUrl.replace(/\/$/, '');
+      baseUrl = baseUrl.replace(/\/$/, '');
       const url = `${baseUrl}/${apiVersion}/models?key=${config.apiKey}`;
       
       try {
           console.log('[GeminiService] Fetching models from:', url);
+          // Use fetch without custom headers for Google API to avoid CORS preflight issues
+          const headers: any = { 'Content-Type': 'application/json' };
+          
+          // Only add API key header if using a custom proxy that might require it (not Google directly)
+          if (config.useCustomUrl) {
+              headers['x-goog-api-key'] = config.apiKey;
+          } else {
+              // For direct Google calls, the key is in the URL.
+              // We remove Content-Type to make it a "simple request" if possible, 
+              // but keeping it is usually fine for GET.
+              delete headers['Content-Type']; 
+          }
+
           const response = await fetch(url, {
               method: 'GET',
-              headers: {
-                  'Content-Type': 'application/json',
-                  'x-goog-api-key': config.apiKey
-              }
+              headers: Object.keys(headers).length > 0 ? headers : undefined
           });
           
           if (!response.ok) {
@@ -215,15 +228,26 @@ export class GeminiService {
           }
           
           const data = await response.json();
-          let models: string[] = [];
+          let models: AiModelInfo[] = [];
 
           // Google format: { models: [{ name: 'models/gemini-pro' }] }
           if (data.models && Array.isArray(data.models)) {
-              models = data.models.map((m: any) => m.name.replace(/^models\//, ''));
+              models = data.models
+                  .filter((m: any) => !m.supportedGenerationMethods || m.supportedGenerationMethods.includes('generateContent'))
+                  .map((m: any) => {
+                      const id = m.name.replace(/^models\//, '');
+                      return {
+                          id: id,
+                          displayName: m.displayName ? `${m.displayName} (${id})` : id
+                      };
+                  });
           } 
           // OpenAI / Generic format: { data: [{ id: 'gemini-pro' }] }
           else if (data.data && Array.isArray(data.data)) {
-              models = data.data.map((m: any) => m.id);
+              models = data.data.map((m: any) => ({
+                  id: m.id,
+                  displayName: m.id
+              }));
           }
           
           return models;

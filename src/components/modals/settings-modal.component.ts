@@ -2,7 +2,7 @@
 import { Component, input, output, inject, signal, effect, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AppStateService, AiConfig } from '../../services/app-state.service';
-import { GeminiService } from '../../services/gemini.service';
+import { GeminiService, AiModelInfo } from '../../services/gemini.service';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -86,47 +86,30 @@ import { FormsModule } from '@angular/forms';
           <div>
             <label class="block text-sm font-medium text-slate-300 mb-1.5">Model</label>
             
-            @if (!config.useCustomUrl) {
-              <div class="relative">
-                <select 
-                  class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none appearance-none transition-all"
-                  [(ngModel)]="config.model"
-                >
-                  <option value="gemini-2.5-flash">gemini-2.5-flash (Recommended)</option>
-                  <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-                  <option value="gemini-1.5-pro">gemini-1.5-pro</option>
-                  <option value="gemini-2.0-flash-exp">gemini-2.0-flash-exp</option>
-                </select>
-                <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+            <div class="space-y-2">
+                <div class="flex gap-2">
+                    <input type="text" 
+                            class="flex-1 bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder-slate-600"
+                            placeholder="e.g. gemini-2.5-flash"
+                            [(ngModel)]="config.model">
+                    <button (click)="fetchModels()" [disabled]="isFetchingModels()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 rounded-lg border border-slate-600 transition-colors text-xs sm:text-sm whitespace-nowrap">
+                        {{ isFetchingModels() ? 'Fetching...' : 'Fetch' }}
+                    </button>
                 </div>
-              </div>
-            } @else {
-               <div class="space-y-2">
-                    <div class="flex gap-2">
-                        <input type="text" 
-                               class="flex-1 bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder-slate-600"
-                               placeholder="e.g. gemini-1.5-flash"
-                               [(ngModel)]="config.model">
-                        <button (click)="fetchModels()" [disabled]="isFetchingModels()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 rounded-lg border border-slate-600 transition-colors text-xs sm:text-sm whitespace-nowrap">
-                            {{ isFetchingModels() ? 'Fetching...' : 'Fetch' }}
-                        </button>
+                
+                @if (fetchedModels().length > 0) {
+                    <div class="animate-fade-in">
+                        <label class="text-xs text-slate-500 mb-1 block">Available Models</label>
+                        <select class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2 text-slate-200 text-xs focus:ring-2 focus:ring-indigo-500 outline-none"
+                                (change)="config.model = $any($event.target).value">
+                            <option value="" disabled selected>Select a model...</option>
+                            @for (m of fetchedModels(); track m.id) {
+                                <option [value]="m.id">{{ m.displayName }}</option>
+                            }
+                        </select>
                     </div>
-                    
-                    @if (fetchedModels().length > 0) {
-                        <div class="animate-fade-in">
-                            <label class="text-xs text-slate-500 mb-1 block">Available Models</label>
-                            <select class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2 text-slate-200 text-xs focus:ring-2 focus:ring-indigo-500 outline-none"
-                                    (change)="config.model = $any($event.target).value">
-                                <option value="" disabled selected>Select a model...</option>
-                                @for (m of fetchedModels(); track m) {
-                                    <option [value]="m">{{ m }}</option>
-                                }
-                            </select>
-                        </div>
-                    }
-                </div>
-            }
+                }
+            </div>
           </div>
           
           <!-- Thinking Level (Only for supported models) -->
@@ -176,7 +159,7 @@ export class SettingsModalComponent {
   
   // Local state for form
   config: AiConfig = { ...this.store.aiConfig() };
-  fetchedModels = signal<string[]>([]);
+  fetchedModels = signal<AiModelInfo[]>([]);
   isFetchingModels = signal(false);
 
   constructor() {
@@ -191,7 +174,7 @@ export class SettingsModalComponent {
   }
   
   async fetchModels() {
-      if (!this.config.customUrl) return;
+      if (!this.config.apiKey) return;
       this.isFetchingModels.set(true);
       try {
           const models = await this.geminiService.listModels(this.config);
