@@ -13,8 +13,8 @@ import { MermaidService } from '../services/mermaid.service';
   },
   template: `
     <div class="flex flex-col h-full">
-      <div class="flex flex-wrap gap-4 justify-between items-center mb-2 shrink-0">
-        <h2 class="text-sm font-medium app-text-main">Live Preview</h2>
+      <div class="flex flex-wrap gap-2 sm:gap-4 justify-between items-center mb-2 shrink-0">
+        <h2 class="text-sm font-medium app-text-main xxs-hidden">Live Preview</h2>
         <ng-content select="[controls]"></ng-content>
       </div>
 
@@ -28,37 +28,37 @@ import { MermaidService } from '../services/mermaid.service';
       <div class="flex-1 min-h-0 border app-border rounded-lg overflow-hidden relative select-none transition-all duration-300"
            [ngClass]="containerClass()">
         <!-- Controls Container -->
-        <div class="absolute bottom-4 right-4 z-20 flex flex-col gap-2">
-          <!-- Actions -->
-          <div class="flex flex-col gap-1 backdrop-blur-sm p-1.5 rounded-lg border shadow-xl transition-colors"
-               [class]="controlsClass()">
-             <button (click)="copySvg()" class="p-1.5 rounded transition flex justify-center items-center"
-                     [class]="buttonClass()" 
-                     [title]="copyText()">
-               @if(isCopied()) {
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-emerald-400"><polyline points="20 6 9 17 4 12"></polyline></svg>
-               } @else {
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-               }
-             </button>
+          <div class="absolute bottom-4 right-4 z-20 flex flex-col gap-2">
+            <!-- Actions -->
+            <div class="flex flex-col gap-1 backdrop-blur-sm p-1.5 rounded-lg border shadow-xl transition-colors"
+                 [class]="controlsClass()">
+               <button (click)="copySvg()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
+                       [class]="buttonClass()" 
+                       [title]="copyText()">
+                 @if(isCopied()) {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-emerald-400"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                 } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                 }
+               </button>
+            </div>
+            <!-- Zoom Controls -->
+            <div class="flex flex-col gap-1 backdrop-blur-sm p-1.5 rounded-lg border shadow-xl transition-colors"
+                 [class]="controlsClass()">
+              <button (click)="zoomIn()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
+                      [class]="buttonClass()" title="Zoom In">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+              </button>
+              <button (click)="resetZoom()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
+                      [class]="buttonClass()" title="Reset Zoom">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+              </button>
+              <button (click)="zoomOut()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
+                      [class]="buttonClass()" title="Zoom Out">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+              </button>
+            </div>
           </div>
-          <!-- Zoom Controls -->
-          <div class="flex flex-col gap-1 backdrop-blur-sm p-1.5 rounded-lg border shadow-xl transition-colors"
-               [class]="controlsClass()">
-            <button (click)="zoomIn()" class="p-1.5 rounded transition flex justify-center items-center"
-                    [class]="buttonClass()" title="Zoom In">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-            </button>
-            <button (click)="resetZoom()" class="p-1.5 rounded transition flex justify-center items-center"
-                    [class]="buttonClass()" title="Reset Zoom">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
-            </button>
-            <button (click)="zoomOut()" class="p-1.5 rounded transition flex justify-center items-center"
-                    [class]="buttonClass()" title="Zoom Out">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-            </button>
-          </div>
-        </div>
 
         <!-- Pannable Container -->
         <div 

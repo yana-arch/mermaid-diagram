@@ -130,3 +130,26 @@
 .error-icon, .error-text, [id^="d-mermaid-error"] {
   display: none !important;
 }
+
+/* Custom breakpoints for very small screens */
+@media (max-width: 480px) {
+  .xxs-hidden {
+    display: none !important;
+  }
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Safe Area Utility */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}

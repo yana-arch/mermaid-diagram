@@ -1,20 +1,20 @@
 
-<main class="min-h-screen app-bg-main font-sans p-3 sm:p-6 lg:p-8 flex flex-col h-[100dvh] transition-colors duration-300">
+<main class="min-h-[100dvh] app-bg-main font-sans p-3 sm:p-6 lg:p-8 flex flex-col transition-colors duration-300 pb-safe">
   <div class="max-w-screen-2xl mx-auto w-full h-full flex flex-col">
     
     <!-- Header -->
-    <header class="flex justify-between items-center mb-4 sm:mb-8 shrink-0 relative">
-      <div class="w-10 lg:w-0"></div> <!-- Spacer for centering -->
+    <header class="flex justify-between items-center mb-2 sm:mb-8 shrink-0 relative px-1 sm:px-0">
+      <div class="w-8 sm:w-10 lg:w-0"></div> <!-- Spacer for centering -->
       
       <div class="text-center">
-        <h1 class="text-2xl sm:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent-secondary)] to-[var(--accent-primary)] truncate">
+        <h1 class="text-xl sm:text-4xl lg:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent-secondary)] to-[var(--accent-primary)] truncate">
           Mermaid Generator
         </h1>
         <p class="hidden sm:block mt-2 text-lg app-text-muted">Instantly visualize your Mermaid diagrams.</p>
       </div>
 
       <button (click)="store.isSettingsModalOpen.set(true)" class="p-2 app-text-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-secondary)] rounded-lg transition-all" title="Settings">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" sm:width="24" sm:height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
       </button>
     </header>
 
@@ -55,32 +55,32 @@
           [code]="store.mermaidCode()" 
           (codeChange)="store.setCode($event)"
         >
-          <div actions class="flex gap-2">
+          <div actions class="flex gap-1.5 sm:gap-2 items-center overflow-x-auto max-w-full no-scrollbar pb-1 sm:pb-0">
             <!-- Mobile: Condensed Buttons -->
-             <button (click)="store.openAiModal('refine')" [disabled]="!store.mermaidCode().trim()" class="text-xs bg-amber-600 hover:bg-amber-500 disabled:bg-amber-600/50 disabled:cursor-not-allowed text-white transition-colors px-2 sm:px-3 py-1.5 rounded-md flex items-center gap-1.5 border border-amber-500/50 shadow-sm">
+             <button (click)="store.openAiModal('refine')" [disabled]="!store.mermaidCode().trim()" class="text-xs bg-amber-600 hover:bg-amber-500 disabled:bg-amber-600/50 disabled:cursor-not-allowed text-white transition-colors px-2 sm:px-3 py-1.5 rounded-md flex items-center gap-1.5 border border-amber-500/50 shadow-sm shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
               <span class="hidden sm:inline">Refine</span>
             </button>
             
-            <button (click)="store.openAiModal('generate')" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white transition-colors px-2 sm:px-3 py-1.5 rounded-md flex items-center gap-1.5 border border-indigo-500/50 shadow-sm">
+            <button (click)="store.openAiModal('generate')" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white transition-colors px-2 sm:px-3 py-1.5 rounded-md flex items-center gap-1.5 border border-indigo-500/50 shadow-sm shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/></svg>
               <span class="hidden sm:inline">AI Generate</span>
               <span class="sm:hidden">AI</span>
             </button>
             
-            <button (click)="store.isExampleModalOpen.set(true)" class="text-xs app-btn transition-colors px-2 sm:px-3 py-1.5 rounded-md flex items-center gap-1.5 border app-border">
+            <button (click)="store.isExampleModalOpen.set(true)" class="text-xs app-btn transition-colors px-2 sm:px-3 py-1.5 rounded-md flex items-center gap-1.5 border app-border shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
               <span class="hidden sm:inline">Examples</span>
             </button>
 
-            <div class="w-px bg-[var(--border-color)] mx-1"></div>
+            <div class="w-px bg-[var(--border-color)] mx-1 shrink-0 h-4"></div>
 
-            <button (click)="store.addToHistory()" class="text-xs app-btn transition-colors px-2 sm:px-3 py-1.5 rounded-md flex items-center gap-1.5 border app-border" title="Save to History">
+            <button (click)="store.addToHistory()" class="text-xs app-btn transition-colors px-2 sm:px-3 py-1.5 rounded-md flex items-center gap-1.5 border app-border shrink-0" title="Save to History">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
               <span class="hidden sm:inline">Save</span>
             </button>
 
-            <button (click)="store.isHistoryModalOpen.set(true)" class="text-xs app-btn transition-colors px-2 sm:px-3 py-1.5 rounded-md flex items-center gap-1.5 border app-border" title="View History">
+            <button (click)="store.isHistoryModalOpen.set(true)" class="text-xs app-btn transition-colors px-2 sm:px-3 py-1.5 rounded-md flex items-center gap-1.5 border app-border shrink-0" title="View History">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
               <span class="hidden sm:inline">History</span>
             </button>
