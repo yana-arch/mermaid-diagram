@@ -24,11 +24,13 @@
     "@types/prismjs": "^1.26.6",
     "mermaid": "^11.12.3",
     "prismjs": "^1.30.0",
-    "rxjs": "^7.8.2",
-    "tailwindcss": "latest"
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
+    "autoprefixer": "^10.4.24",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }
