@@ -1,8 +1,8 @@
 
 import { Component, ElementRef, ViewEncapsulation, input, output, viewChild, effect, inject, PLATFORM_ID, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-
-declare const Prism: any;
+import Prism from 'prismjs';
+import 'prismjs/components/prism-mermaid'; // Try to import if available, or just rely on core
 
 @Component({
   selector: 'app-code-editor',

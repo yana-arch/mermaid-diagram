@@ -1,7 +1,6 @@
 
 import { Injectable } from '@angular/core';
-
-declare const mermaid: any;
+import mermaid from 'mermaid';
 
 export interface MermaidThemeConfig {
   baseTheme: string;
@@ -17,10 +16,6 @@ export class MermaidService {
   }
 
   private initializeBase() {
-    if (typeof mermaid === 'undefined') {
-      return;
-    }
-
     // Initialize with settings that minimize console output and worker complexity
     // to avoid "Function object could not be cloned" errors in some environments.
     mermaid.initialize({
@@ -104,15 +99,11 @@ export class MermaidService {
     }
 
     try {
-      if (typeof mermaid === 'undefined') {
-        throw new Error('Mermaid library not loaded');
-      }
-
       // Update theme configuration before render.
       const config = this.getThemeConfig(theme);
       
       mermaid.initialize({ 
-        theme: config.baseTheme,
+        theme: config.baseTheme as any,
         themeVariables: config.variables,
         suppressErrorRendering: true 
       });
