@@ -13,7 +13,7 @@ permissions:
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -37,13 +37,23 @@ jobs:
         run: npm run build
 
       - name: Sync Capacitor
-        run: npx cap sync
+        run: npx cap sync android
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
       - name: Build Android APK
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --no-daemon
 
       - name: Rename APK
         id: rename_apk
@@ -54,11 +64,11 @@ jobs:
           fi
           # Ensure output directory exists
           mkdir -p output
-          
+
           # Find the APK (debug build usually outputs to app/build/outputs/apk/debug/app-debug.apk)
           APK_PATH="android/app/build/outputs/apk/debug/app-debug.apk"
           NEW_NAME="mermaid-diagram-${VERSION}.apk"
-          
+
           if [ -f "$APK_PATH" ]; then
             cp "$APK_PATH" "output/$NEW_NAME"
             echo "apk_path=output/$NEW_NAME" >> $GITHUB_OUTPUT

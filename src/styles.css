@@ -1,3 +1,20 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Critical: Fix height chain for Android WebView.
+   Without height: 100% on these elements, h-full, flex-grow,
+   and absolute inset-0 children all collapse to 0 height.
+   100dvh is not reliably supported in Android WebView. */
+html,
+body {
+  height: 100%;
+  /* Fallback for environments where 100dvh doesn't work */
+  min-height: 100%;
+}
+
+app-root {
+  display: block;
+  height: 100%;
+  min-height: 100%;
+}
