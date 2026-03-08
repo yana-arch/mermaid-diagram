@@ -10,6 +10,7 @@ import { ExportModalComponent, ExportFormat } from './components/modals/export-m
 import { SettingsModalComponent } from './components/modals/settings-modal.component';
 import { HistoryModalComponent } from './components/modals/history-modal.component';
 import { CHART_EXAMPLES } from './data/chart-examples';
+import { ExportService } from './services/export.service';
 
 @Component({
   selector: 'app-root',
@@ -33,6 +34,7 @@ import { CHART_EXAMPLES } from './data/chart-examples';
 })
 export class AppComponent {
   store = inject(AppStateService);
+  exportService = inject(ExportService);
   previewComponent = viewChild(ChartPreviewComponent);
 
   // Import from data file
@@ -73,53 +75,6 @@ export class AppComponent {
     const svgEl = this.previewComponent()?.getSvgElement();
     if (!svgEl) return;
 
-    if (event.format === 'svg') {
-      const xml = new XMLSerializer().serializeToString(svgEl);
-      this.downloadFile('chart.svg', xml, 'image/svg+xml');
-      return;
-    }
-
-    this.renderRaster(svgEl, event.format, event.scale);
-  }
-
-  private renderRaster(svgEl: SVGSVGElement, format: string, scale: number) {
-    const viewBox = svgEl.viewBox.baseVal;
-    const width = (viewBox?.width || svgEl.clientWidth) * scale;
-    const height = (viewBox?.height || svgEl.clientHeight) * scale;
-    const xml = new XMLSerializer().serializeToString(svgEl);
-    
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    if(!ctx) return;
-
-    if (format === 'jpeg') {
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, width, height);
-    }
-
-    const img = new Image();
-    const svg64 = btoa(unescape(encodeURIComponent(xml)));
-    img.src = `data:image/svg+xml;base64,${svg64}`;
-    
-    img.onload = () => {
-      ctx.drawImage(img, 0, 0, width, height);
-      const url = canvas.toDataURL(`image/${format}`, 0.9);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `chart.${format}`;
-      a.click();
-    };
-  }
-
-  private downloadFile(name: string, content: string, type: string) {
-    const blob = new Blob([content], { type });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = name;
-    a.click();
-    URL.revokeObjectURL(url);
+    this.exportService.exportChart(svgEl, event.format, event.scale);
   }
 }

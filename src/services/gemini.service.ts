@@ -2,6 +2,25 @@
 import { Injectable } from '@angular/core';
 import { GoogleGenAI } from "@google/genai";
 
+const DEFAULT_TEMPERATURE = 0.2;
+const MAX_RETRIES = 3;
+const DEFAULT_RETRY_DELAY_MS = 1000;
+
+interface GenerateContentPart {
+  text?: string;
+  inlineData?: {
+    mimeType: string;
+    data: string;
+  };
+}
+
+interface GenerationConfig {
+  temperature: number;
+  thinkingConfig?: {
+    thinkingBudget: number;
+  };
+}
+
 export interface AiInputData {
   prompt: string; 
   contextCode?: string; 
@@ -48,7 +67,7 @@ export class GeminiService {
     const systemInstruction = this.getSystemInstruction(input.contextCode);
 
     try {
-      const parts: any[] = [{ text: input.prompt }];
+      const parts: GenerateContentPart[] = [{ text: input.prompt }];
 
       if (input.media) {
         parts.push({
@@ -60,8 +79,8 @@ export class GeminiService {
       }
 
       // Prepare configuration
-      const generationConfig: any = {
-        temperature: 0.2,
+      const generationConfig: GenerationConfig = {
+        temperature: DEFAULT_TEMPERATURE,
       };
 
       // Handle Thinking Config (Only for supported models like gemini-2.5-flash)
@@ -75,7 +94,7 @@ export class GeminiService {
       }
 
       // USE SDK FOR STANDARD CALLS
-      const clientOptions: any = { 
+      const clientOptions: Record<string, string> = { 
         apiKey: config.apiKey
       };
       
@@ -136,7 +155,7 @@ export class GeminiService {
     return instruction;
   }
 
-  private async retry<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> {
+  private async retry<T>(fn: () => Promise<T>, retries = MAX_RETRIES, delay = DEFAULT_RETRY_DELAY_MS): Promise<T> {
     try {
       return await fn();
     } catch (error: any) {
@@ -150,7 +169,7 @@ export class GeminiService {
     }
   }
 
-  private async generateWithFetch(config: AiRequestConfig, systemInstruction: string, parts: any[], generationConfig: any): Promise<string> {
+  private async generateWithFetch(config: AiRequestConfig, systemInstruction: string, parts: GenerateContentPart[], generationConfig: GenerationConfig): Promise<string> {
       const apiVersion = config.apiVersion || 'v1beta';
       // Strip trailing slash from baseUrl
       const baseUrl = config.baseUrl!.replace(/\/$/, '');
@@ -205,7 +224,7 @@ export class GeminiService {
       try {
           console.log('[GeminiService] Fetching models from:', url);
           // Use fetch without custom headers for Google API to avoid CORS preflight issues
-          const headers: any = { 'Content-Type': 'application/json' };
+          const headers: Record<string, string> = { 'Content-Type': 'application/json' };
           
           // Only add API key header if using a custom proxy that might require it (not Google directly)
           if (config.useCustomUrl) {
