@@ -49,6 +49,7 @@ export class AppStateService {
   // State Signals
   readonly mermaidCode = signal<string>(INITIAL_CODE);
   readonly theme = signal<Theme>('default');
+  readonly proposedCode = signal<string | null>(null);
   
   // UI State
   readonly mobileTab = signal<MobileTab>('editor');
@@ -181,6 +182,7 @@ export class AppStateService {
     this.isExampleModalOpen.set(false);
     this.isExportModalOpen.set(false);
     this.isSettingsModalOpen.set(false);
+    this.proposedCode.set(null);
   }
   
   updateAiConfig(config: Partial<AiConfig>) {

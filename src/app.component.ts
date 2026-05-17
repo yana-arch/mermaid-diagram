@@ -4,7 +4,7 @@ import { AppStateService, HistoryItem } from './services/core/app-state.service'
 import { CodeEditorComponent } from './components/code-editor.component';
 import { ChartPreviewComponent } from './components/chart-preview.component';
 import { AppToolbarComponent } from './components/app-toolbar.component';
-import { AiModalComponent } from './components/modals/ai-modal.component';
+import { AiCopilotComponent } from './components/modals/ai-copilot.component';
 import { ExampleModalComponent } from './components/modals/example-modal.component';
 import { ExportModalComponent, ExportFormat } from './components/modals/export-modal.component';
 import { SettingsModalComponent } from './components/modals/settings-modal.component';
@@ -32,7 +32,7 @@ import { CHART_EXAMPLES } from './data/chart-examples';
     CodeEditorComponent, 
     ChartPreviewComponent, 
     AppToolbarComponent,
-    AiModalComponent,
+    AiCopilotComponent,
     ExampleModalComponent,
     ExportModalComponent,
     SettingsModalComponent,
@@ -72,13 +72,6 @@ export class AppComponent {
         return window.innerWidth >= 1024;
     }
     return true;
-  }
-
-  handleAiCode(code: string) {
-    this.store.setCode(code);
-    this.store.isAiModalOpen.set(false);
-    // Switch to preview tab on mobile to see result
-    this.store.setMobileTab('preview');
   }
 
   handleExampleLoad(code: string) {

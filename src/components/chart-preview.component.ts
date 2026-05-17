@@ -42,7 +42,21 @@ import { MermaidService } from '../services/diagram/mermaid.service';
       }
 
       <div class="flex-1 min-h-0 border app-border rounded-lg overflow-hidden relative select-none transition-all duration-300"
-           [ngClass]="containerClass()">
+           [ngClass]="containerClass()"
+           [class.render-shimmer-effect]="isRendering()">
+        
+        <!-- Compilation Loader Overlay Mask -->
+        @if (isRendering()) {
+          <div class="absolute inset-0 bg-slate-950/20 backdrop-blur-[2px] pointer-events-none z-10 flex items-center justify-center transition-all duration-300">
+            <div class="flex flex-col items-center gap-3 bg-slate-900/80 backdrop-blur-md px-6 py-4 rounded-xl border border-slate-700/50 shadow-2xl">
+              <div class="relative w-8 h-8">
+                <div class="absolute inset-0 border-2 border-indigo-500/20 rounded-full"></div>
+                <div class="absolute inset-0 border-2 border-t-indigo-500 border-r-indigo-500 rounded-full animate-spin"></div>
+              </div>
+              <span class="text-xs font-medium tracking-wide text-indigo-200">Compiling Diagram...</span>
+            </div>
+          </div>
+        }
         
         <!-- Zoom Level HUD Indicator -->
         <div class="absolute top-4 left-4 z-20 pointer-events-none bg-slate-900/60 backdrop-blur px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-mono text-slate-300 border border-slate-700/50">
@@ -69,19 +83,19 @@ import { MermaidService } from '../services/diagram/mermaid.service';
           <div class="flex flex-col gap-1 backdrop-blur-sm p-1.5 rounded-lg border shadow-xl transition-colors"
                [class]="controlsClass()">
             <button (click)="zoomIn()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
-                    [class]="buttonClass()" title="Zoom In" aria-label="Zoom In">
+                     [class]="buttonClass()" title="Zoom In" aria-label="Zoom In">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
             </button>
             <button (click)="autoFit()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
-                    [class]="buttonClass()" title="Auto Fit to Screen" aria-label="Auto Fit to Screen">
+                     [class]="buttonClass()" title="Auto Fit to Screen" aria-label="Auto Fit to Screen">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 15v6h-6M3 9V3h6M10 14l-7 7M14 10l7-7"/></svg>
             </button>
             <button (click)="resetZoom()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
-                    [class]="buttonClass()" title="Reset Zoom (100%)" aria-label="Reset Zoom">
+                     [class]="buttonClass()" title="Reset Zoom (100%)" aria-label="Reset Zoom">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
             </button>
             <button (click)="zoomOut()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
-                    [class]="buttonClass()" title="Zoom Out" aria-label="Zoom Out">
+                     [class]="buttonClass()" title="Zoom Out" aria-label="Zoom Out">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
             </button>
           </div>
@@ -131,6 +145,7 @@ export class ChartPreviewComponent {
   error = signal<string | null>(null);
   isCopied = signal(false);
   copyText = signal('Copy SVG Code');
+  isRendering = signal(false);
 
   private readonly THEME_CONTAINER_CLASSES: Record<string, string> = {
     'dark': 'bg-slate-900 border-slate-700',
@@ -217,6 +232,9 @@ export class ChartPreviewComponent {
       if (!isPlatformBrowser(this.platformId)) return;
 
       clearTimeout(this.debounceTimer);
+      if (code.trim()) {
+        this.isRendering.set(true);
+      }
       this.onRenderStart.emit();
       this.error.set(null);
       this.onRenderError.emit(null);
@@ -225,12 +243,14 @@ export class ChartPreviewComponent {
         if (!code.trim()) {
           el.innerHTML = '<p class="opacity-40 text-center p-8 select-none" style="color: currentColor">Your chart will appear here.</p>';
           this.onRenderEnd.emit();
+          this.isRendering.set(false);
           return;
         }
         try {
           const svg = await this.mermaidService.render(code, theme);
           el.innerHTML = svg;
           this.onRenderEnd.emit();
+          this.isRendering.set(false);
           
           // Auto-fit to screen after successful rendering
           clearTimeout(this.autoFitTimer);
@@ -243,6 +263,7 @@ export class ChartPreviewComponent {
           this.onRenderError.emit(msg);
           el.innerHTML = '';
           this.onRenderEnd.emit();
+          this.isRendering.set(false);
         }
       }, 400);
     });
