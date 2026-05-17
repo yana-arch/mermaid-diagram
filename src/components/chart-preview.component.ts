@@ -34,7 +34,8 @@ import { MermaidService } from '../services/mermaid.service';
                  [class]="controlsClass()">
                <button (click)="copySvg()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
                        [class]="buttonClass()" 
-                       [title]="copyText()">
+                       [title]="copyText()"
+                       [attr.aria-label]="copyText()">
                  @if(isCopied()) {
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-emerald-400"><polyline points="20 6 9 17 4 12"></polyline></svg>
                  } @else {
@@ -46,15 +47,15 @@ import { MermaidService } from '../services/mermaid.service';
             <div class="flex flex-col gap-1 backdrop-blur-sm p-1.5 rounded-lg border shadow-xl transition-colors"
                  [class]="controlsClass()">
               <button (click)="zoomIn()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
-                      [class]="buttonClass()" title="Zoom In">
+                      [class]="buttonClass()" title="Zoom In" aria-label="Zoom In">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
               </button>
               <button (click)="resetZoom()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
-                      [class]="buttonClass()" title="Reset Zoom">
+                      [class]="buttonClass()" title="Reset Zoom" aria-label="Reset Zoom">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
               </button>
               <button (click)="zoomOut()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
-                      [class]="buttonClass()" title="Zoom Out">
+                      [class]="buttonClass()" title="Zoom Out" aria-label="Zoom Out">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
               </button>
             </div>
@@ -102,32 +103,34 @@ export class ChartPreviewComponent {
   error = signal<string | null>(null);
   isCopied = signal(false);
   copyText = signal('Copy SVG Code');
+
+  private readonly THEME_CONTAINER_CLASSES: Record<string, string> = {
+    'dark': 'bg-slate-900 border-slate-700',
+    'forest': 'bg-[#181d1b] border-emerald-900/30',
+    'cyberpunk': 'bg-[#090014] border-fuchsia-900/50 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/20 via-[#090014] to-[#090014]',
+    'ocean': 'bg-gradient-to-b from-cyan-950 to-blue-950 border-cyan-900/30',
+    'sunset': 'bg-gradient-to-br from-orange-50 to-rose-50 border-orange-200',
+    'minimal': 'bg-white border-black border-2',
+    'neutral': 'app-bg-secondary'
+  };
   
   // Computed Theme Classes
   containerClass = computed(() => {
-    switch(this.theme()) {
-      case 'dark': return 'bg-slate-900 border-slate-700';
-      case 'forest': return 'bg-[#181d1b] border-emerald-900/30';
-      case 'cyberpunk': return 'bg-[#090014] border-fuchsia-900/50 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/20 via-[#090014] to-[#090014]';
-      case 'ocean': return 'bg-gradient-to-b from-cyan-950 to-blue-950 border-cyan-900/30';
-      case 'sunset': return 'bg-gradient-to-br from-orange-50 to-rose-50 border-orange-200';
-      case 'minimal': return 'bg-white border-black border-2';
-      // Default: rely on global CSS variable classes 'app-bg-secondary'
-      default: return 'app-bg-secondary'; 
-    }
+    return this.THEME_CONTAINER_CLASSES[this.theme()] || 'app-bg-secondary';
   });
 
   controlsClass = computed(() => {
+    const t = this.theme();
     // If we are in a darkish theme, keep controls dark
-    if (['default', 'dark', 'forest', 'cyberpunk', 'ocean'].includes(this.theme())) {
+    if (['default', 'dark', 'forest', 'cyberpunk', 'ocean'].includes(t)) {
        return 'bg-slate-800/90 border-slate-600';
     }
     // Minimal specific
-    if (this.theme() === 'minimal') {
+    if (t === 'minimal') {
       return 'bg-white border-black border-2 shadow-none';
     }
     // If explicit light theme
-    if (['neutral', 'sunset'].includes(this.theme())) {
+    if (['neutral', 'sunset'].includes(t)) {
         return 'bg-white/90 border-slate-200';
     }
     // Default fallback
@@ -135,10 +138,11 @@ export class ChartPreviewComponent {
   });
 
   buttonClass = computed(() => {
-     if (['default', 'dark', 'forest', 'cyberpunk', 'ocean'].includes(this.theme())) {
+     const t = this.theme();
+     if (['default', 'dark', 'forest', 'cyberpunk', 'ocean'].includes(t)) {
        return 'text-slate-200 hover:text-sky-400 hover:bg-slate-700';
     }
-    if (this.theme() === 'minimal') {
+    if (t === 'minimal') {
       return 'text-black hover:bg-gray-100';
     }
     return 'text-slate-600 hover:text-indigo-600 hover:bg-slate-100';

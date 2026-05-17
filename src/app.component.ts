@@ -1,5 +1,5 @@
 
-import { Component, ChangeDetectionStrategy, viewChild, inject, ViewEncapsulation } from '@angular/core';
+import { Component, ChangeDetectionStrategy, viewChild, inject, ViewEncapsulation, HostListener } from '@angular/core';
 import { AppStateService, HistoryItem } from './services/app-state.service';
 import { CodeEditorComponent } from './components/code-editor.component';
 import { ChartPreviewComponent } from './components/chart-preview.component';
@@ -34,6 +34,11 @@ import { CHART_EXAMPLES } from './data/chart-examples';
 export class AppComponent {
   store = inject(AppStateService);
   previewComponent = viewChild(ChartPreviewComponent);
+
+  @HostListener('window:keydown.escape')
+  onEscape() {
+    this.store.closeAllModals();
+  }
 
   // Import from data file
   readonly chartExamples = CHART_EXAMPLES;

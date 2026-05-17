@@ -22,7 +22,8 @@ import { FormsModule } from '@angular/forms';
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
             Settings
           </h3>
-          <button (click)="close.emit()" class="text-slate-400 hover:text-white transition-colors p-1 rounded hover:bg-slate-700">
+          <button (click)="close.emit()" class="text-slate-400 hover:text-white transition-colors p-1 rounded hover:bg-slate-700"
+            aria-label="Close settings" title="Close">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
@@ -39,9 +40,24 @@ import { FormsModule } from '@angular/forms';
               placeholder="AIza..."
               [(ngModel)]="config.apiKey"
             >
+            <div class="mt-2 p-2 bg-amber-900/20 border border-amber-500/30 rounded text-[10px] text-amber-200/80 leading-relaxed">
+               <span class="font-bold text-amber-400">Security Note:</span> Your API key is stored in the browser's <code>localStorage</code> unencrypted. Avoid using sensitive keys on public or shared devices.
+            </div>
             <p class="mt-1.5 text-xs text-slate-500">
-              Key is stored locally. Get one at <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-indigo-400 hover:underline">Google AI Studio</a>.
+              Get a key at <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-indigo-400 hover:underline">Google AI Studio</a>.
             </p>
+          </div>
+
+          <!-- API Version -->
+          <div>
+            <label class="block text-sm font-medium text-slate-300 mb-1.5">API Version</label>
+            <select 
+              class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none appearance-none transition-all"
+              [(ngModel)]="config.apiVersion"
+            >
+              <option value="v1beta">v1beta (Latest Features)</option>
+              <option value="v1">v1 (Stable)</option>
+            </select>
           </div>
 
           <!-- API Endpoint Configuration -->

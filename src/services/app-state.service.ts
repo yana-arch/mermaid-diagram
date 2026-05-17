@@ -174,6 +174,14 @@ export class AppStateService {
   setMobileTab(tab: MobileTab) {
     this.mobileTab.set(tab);
   }
+
+  closeAllModals() {
+    this.isHistoryModalOpen.set(false);
+    this.isAiModalOpen.set(false);
+    this.isExampleModalOpen.set(false);
+    this.isExportModalOpen.set(false);
+    this.isSettingsModalOpen.set(false);
+  }
   
   updateAiConfig(config: Partial<AiConfig>) {
     this.aiConfig.update(current => ({ ...current, ...config }));

@@ -3,19 +3,22 @@ import { Component, ElementRef, inject, input, output, signal, viewChild, effect
 import { CommonModule } from '@angular/common';
 import { GeminiService, AiInputData } from '../../services/gemini.service';
 import { AiMode, AppStateService } from '../../services/app-state.service';
+import { AiTabDescribeComponent } from './ai-tab-describe.component';
+import { AiTabUrlComponent } from './ai-tab-url.component';
+import { AiTabFileComponent } from './ai-tab-file.component';
 
 export type AiTab = 'text' | 'url' | 'file';
 
 @Component({
   selector: 'app-ai-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AiTabDescribeComponent, AiTabUrlComponent, AiTabFileComponent],
   template: `
     @if (isOpen()) {
       <div class="fixed inset-0 bg-black/70 z-50 animate-fade-in backdrop-blur-sm" (click)="close.emit()"></div>
       <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 border border-indigo-500/50 shadow-2xl z-50 flex flex-col animate-scale-in
                   w-[95%] rounded-xl max-h-[90vh]
-                  sm:w-full sm:max-w-lg sm:rounded-2xl">
+                  sm:w-full sm:max-max-lg sm:rounded-2xl sm:max-w-lg">
         
         <!-- Header -->
         <div class="flex justify-between items-center p-4 sm:p-5 border-b border-slate-700 shrink-0">
@@ -25,87 +28,44 @@ export type AiTab = 'text' | 'url' | 'file';
                @if(mode() === 'refine') { Refine / Fix Chart } @else { Generate with AI }
              </h3>
           </div>
-          <button (click)="close.emit()" [disabled]="isAiLoading()" class="text-slate-400 hover:text-white transition-colors p-1 rounded hover:bg-slate-700 disabled:opacity-50">
+          <button (click)="close.emit()" [disabled]="isAiLoading()" 
+            class="text-slate-400 hover:text-white transition-colors p-1 rounded hover:bg-slate-700 disabled:opacity-50"
+            aria-label="Close modal" title="Close">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
   
         <!-- Tabs (Only show in Generate Mode) -->
         @if(mode() === 'generate') {
-          <div class="flex border-b border-slate-700 px-4 sm:px-5 gap-4 shrink-0 overflow-x-auto">
-            <button (click)="setTab('text')" class="py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none whitespace-nowrap" [ngClass]="activeTab() === 'text' ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-slate-400 hover:text-slate-200'">Describe</button>
-            <button (click)="setTab('url')" class="py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none whitespace-nowrap" [ngClass]="activeTab() === 'url' ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-slate-400 hover:text-slate-200'">From URL</button>
-            <button (click)="setTab('file')" class="py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none whitespace-nowrap" [ngClass]="activeTab() === 'file' ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-slate-400 hover:text-slate-200'">From File</button>
+          <div class="flex border-b border-slate-700 px-4 sm:px-5 gap-4 shrink-0 overflow-x-auto" role="tablist">
+            <button (click)="setTab('text')" role="tab" [attr.aria-selected]="activeTab() === 'text'"
+              class="py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none whitespace-nowrap" [ngClass]="activeTab() === 'text' ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-slate-400 hover:text-slate-200'">Describe</button>
+            <button (click)="setTab('url')" role="tab" [attr.aria-selected]="activeTab() === 'url'"
+              class="py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none whitespace-nowrap" [ngClass]="activeTab() === 'url' ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-slate-400 hover:text-slate-200'">From URL</button>
+            <button (click)="setTab('file')" role="tab" [attr.aria-selected]="activeTab() === 'file'"
+              class="py-3 text-sm font-medium border-b-2 transition-colors focus:outline-none whitespace-nowrap" [ngClass]="activeTab() === 'file' ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-slate-400 hover:text-slate-200'">From File</button>
           </div>
         }
   
         <div class="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-grow">
-          <!-- Text Tab / Refine Mode -->
-          <div [class.hidden]="mode() === 'generate' && activeTab() !== 'text'">
-             <label class="block text-sm font-medium text-slate-300 mb-2">
-               @if(mode() === 'refine') { What changes would you like to make? } @else { Instructions }
-             </label>
-             <textarea #promptInput class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none resize-none transition-all" rows="5" 
-               [placeholder]="mode() === 'refine' ? 'e.g., Change the red nodes to blue, add a condition check before step C...' : 'Describe your diagram structure, relationships, and labels...'" 
-               [disabled]="isAiLoading()"></textarea>
-          </div>
-  
+          <!-- Describe Tab -->
+          <app-ai-tab-describe #describeTab
+            [class.hidden]="mode() === 'generate' && activeTab() !== 'text'"
+            [mode]="mode()" 
+            [isLoading]="isAiLoading()" />
+
           <!-- URL Tab -->
-          <div [class.hidden]="mode() !== 'generate' || activeTab() !== 'url'">
-             <div class="space-y-4">
-               <div>
-                 <label class="block text-sm font-medium text-slate-300 mb-2">Public URL (Text content)</label>
-                 <div class="flex gap-2 flex-col sm:flex-row">
-                   <input #urlInput type="url" class="flex-1 bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="https://example.com/docs" [disabled]="isAiLoading()"/>
-                   <button (click)="fetchUrl()" [disabled]="isAiLoading()" class="bg-slate-700 hover:bg-slate-600 text-white font-medium px-4 py-2 sm:py-0 rounded-lg border border-slate-600 transition-colors">Fetch</button>
-                 </div>
-                 <p class="text-xs text-slate-500 mt-1">Note: Many websites block direct access (CORS). If fetching fails, please copy/paste the content into the "Describe" tab.</p>
-               </div>
-               <div>
-                  <label class="block text-sm font-medium text-slate-300 mb-2">Additional Instructions <span class="text-slate-500 font-normal">(Optional)</span></label>
-                  <textarea #urlInstructionInput class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none resize-none transition-all" rows="3" placeholder="e.g. Focus only on the authentication flow..."></textarea>
-               </div>
-             </div>
-          </div>
-  
+          <app-ai-tab-url #urlTab
+            [class.hidden]="mode() !== 'generate' || activeTab() !== 'url'"
+            [isLoading]="isAiLoading()"
+            (onFetch)="handleUrlFetch($event)" />
+
           <!-- File Tab -->
-          <div [class.hidden]="mode() !== 'generate' || activeTab() !== 'file'">
-            <div class="space-y-4">
-               <div>
-                 <label class="block text-sm font-medium text-slate-300 mb-2">Upload Source File</label>
-                 <div class="relative border-2 border-dashed border-slate-600 rounded-lg p-4 sm:p-6 flex flex-col items-center justify-center text-center hover:border-indigo-500 transition-colors bg-slate-900/50 group">
-                   @if(!selectedFile()) {
-                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 sm:h-10 sm:w-10 text-slate-500 mb-3 group-hover:text-indigo-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                     </svg>
-                     <p class="text-sm text-slate-400 mb-1">Drag & drop or click to upload</p>
-                     <p class="text-xs text-slate-500">Supported: Code, Text, PDF, Images</p>
-                     <input 
-                       #fileInput 
-                       type="file" 
-                       class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" 
-                       (change)="onFileSelected($event)" 
-                       accept=".txt,.md,.py,.js,.ts,.java,.cpp,.html,.css,.json,.sql,.xml,.png,.jpg,.jpeg,.webp,.pdf"
-                     />
-                   } @else {
-                      <div class="flex items-center gap-3 w-full bg-slate-800 p-3 rounded-lg border border-indigo-500/50">
-                         <div class="bg-indigo-500/20 p-2 rounded text-indigo-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-                         </div>
-                         <span class="text-white truncate flex-1 text-left text-sm font-medium">{{ selectedFile()?.name }}</span>
-                         <button (click)="removeFile()" class="text-slate-400 hover:text-red-400 p-1 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                         </button>
-                      </div>
-                   }
-                 </div>
-               </div>
-               <div>
-                  <label class="block text-sm font-medium text-slate-300 mb-2">Additional Instructions <span class="text-slate-500 font-normal">(Optional)</span></label>
-                  <textarea #fileInstructionInput class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none resize-none transition-all" rows="3" placeholder="e.g. Visualize the relationship between classes..."></textarea>
-               </div>
-            </div>
-          </div>
+          <app-ai-tab-file #fileTab
+            [class.hidden]="mode() !== 'generate' || activeTab() !== 'file'"
+            [selectedFile]="selectedFile()"
+            (onFileSelect)="onFileSelected($event)"
+            (onRemoveFile)="removeFile()" />
           
           @if (selectedFile() && activeTab() !== 'file' && mode() === 'generate') {
             <div class="mt-4 flex items-center gap-2 text-xs text-indigo-300 bg-indigo-500/10 p-2 rounded border border-indigo-500/30">
@@ -152,12 +112,9 @@ export class AiModalComponent {
   error = signal<string | null>(null);
   selectedFile = signal<{name: string, type: string, content: string, isBase64: boolean} | null>(null);
 
-  promptInput = viewChild<ElementRef<HTMLTextAreaElement>>('promptInput');
-  urlInput = viewChild<ElementRef<HTMLInputElement>>('urlInput');
-  urlInstructionInput = viewChild<ElementRef<HTMLTextAreaElement>>('urlInstructionInput');
-  
-  fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
-  fileInstructionInput = viewChild<ElementRef<HTMLTextAreaElement>>('fileInstructionInput');
+  describeTab = viewChild<AiTabDescribeComponent>('describeTab');
+  urlTab = viewChild<AiTabUrlComponent>('urlTab');
+  fileTab = viewChild<AiTabFileComponent>('fileTab');
 
   private geminiService = inject(GeminiService);
   private store = inject(AppStateService);
@@ -175,8 +132,7 @@ export class AiModalComponent {
 
   setTab(tab: AiTab) { this.activeTab.set(tab); this.error.set(null); }
 
-  async fetchUrl() {
-    const url = this.urlInput()?.nativeElement.value;
+  async handleUrlFetch(url: string) {
     if (!url) return;
     this.isAiLoading.set(true);
     try {
@@ -218,8 +174,8 @@ export class AiModalComponent {
 
   removeFile() {
     this.selectedFile.set(null);
-    if(this.fileInput()?.nativeElement) this.fileInput()!.nativeElement.value = '';
-    if(this.urlInput()?.nativeElement) this.urlInput()!.nativeElement.value = '';
+    this.fileTab()?.clear();
+    this.urlTab()?.clear();
   }
 
   async generate() {
@@ -240,26 +196,27 @@ export class AiModalComponent {
         // LOGIC FOR GENERATE MODE
         if (this.mode() === 'generate') {
             if (this.activeTab() === 'text') {
-                prompt = this.promptInput()?.nativeElement.value || '';
+                prompt = this.describeTab()?.value || '';
             } 
             else if (this.activeTab() === 'url') {
-                const instructions = this.urlInstructionInput()?.nativeElement.value || '';
-                if (!file) {
-                    await this.fetchUrl();
+                const instructions = this.urlTab()?.instructions || '';
+                const url = this.urlTab()?.url;
+                if (!file && url) {
+                    await this.handleUrlFetch(url);
                     file = this.selectedFile();
                 }
                 if (!file) { throw new Error('No URL content fetched.'); }
                 prompt = `Analyze the content from ${file.name}.\nInstructions: ${instructions}`;
             }
             else if (this.activeTab() === 'file') {
-                const instructions = this.fileInstructionInput()?.nativeElement.value || '';
+                const instructions = this.fileTab()?.instructions || '';
                 if (!file) { throw new Error('No file selected.'); }
                 prompt = `Analyze the attached file (${file.name}).\nInstructions: ${instructions}`;
             }
         } 
         // LOGIC FOR REFINE MODE
         else {
-             prompt = this.promptInput()?.nativeElement.value || '';
+             prompt = this.describeTab()?.value || '';
              if (!prompt.trim()) { throw new Error('Please enter update instructions.'); }
         }
 
@@ -291,10 +248,9 @@ export class AiModalComponent {
 
         this.codeGenerated.emit(code);
         this.removeFile();
-        
-        if(this.promptInput()?.nativeElement) this.promptInput()!.nativeElement.value = '';
-        if(this.urlInstructionInput()?.nativeElement) this.urlInstructionInput()!.nativeElement.value = '';
-        if(this.fileInstructionInput()?.nativeElement) this.fileInstructionInput()!.nativeElement.value = '';
+        this.describeTab()?.clear();
+        this.urlTab()?.clear();
+        this.fileTab()?.clear();
         
     } catch (e: any) {
         this.error.set(e.message || 'Generation failed.');

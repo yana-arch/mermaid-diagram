@@ -32,6 +32,7 @@ import Prism from "prismjs";
           (click)="copyCode()"
           class="text-xs app-text-muted hover:text-[var(--text-main)] transition-colors flex items-center justify-center p-1 rounded hover:bg-[var(--bg-secondary)]"
           [title]="copyText()"
+          [attr.aria-label]="copyText()"
         >
           @if (isCopied()) {
             <svg
