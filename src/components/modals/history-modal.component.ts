@@ -12,12 +12,12 @@ import { HistoryItem } from '../../services/core/app-state.service';
     @if (isOpen()) {
       <div class="fixed inset-0 bg-black/60 z-40 animate-fade-in backdrop-blur-sm" (click)="close.emit()"></div>
       <!-- Responsive Modal Container -->
-      <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 border border-slate-700 shadow-2xl z-50 flex flex-col animate-slide-up
-                  w-[95%] h-[90vh] rounded-xl
-                  sm:w-full sm:max-w-4xl sm:h-auto sm:max-h-[85vh]">
+      <div class="hybrid-modal w-full md:max-w-4xl">
+        <!-- Drag Handle Indicator for Mobile Bottom Sheet -->
+        <div class="h-1.5 w-12 bg-slate-600 rounded-full mx-auto my-3 shrink-0 md:hidden"></div>
         
         <!-- Header -->
-        <div class="flex justify-between items-center p-4 sm:p-5 border-b border-slate-700 flex-shrink-0 bg-slate-800/95 backdrop-blur z-10 rounded-t-xl">
+        <div class="flex justify-between items-center px-4 pb-4 pt-2 md:pt-4 md:px-5 border-b border-slate-700 flex-shrink-0 bg-slate-800/95 backdrop-blur z-10">
           <div>
             <h3 class="text-lg sm:text-xl font-bold text-white">History</h3>
             <p class="text-xs sm:text-sm text-slate-400">Manage your saved diagrams</p>

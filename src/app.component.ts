@@ -1,5 +1,5 @@
 
-import { Component, ChangeDetectionStrategy, viewChild, inject, ViewEncapsulation, HostListener } from '@angular/core';
+import { Component, ChangeDetectionStrategy, viewChild, inject, ViewEncapsulation, HostListener, signal } from '@angular/core';
 import { AppStateService, HistoryItem } from './services/core/app-state.service';
 import { CodeEditorComponent } from './components/code-editor.component';
 import { ChartPreviewComponent } from './components/chart-preview.component';
@@ -18,7 +18,15 @@ import { CHART_EXAMPLES } from './data/chart-examples';
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: {
-    '[class]': '"block min-h-screen theme-" + store.theme()'
+    'class': 'block min-h-screen',
+    '[class.theme-default]': 'store.theme() === "default"',
+    '[class.theme-dark]': 'store.theme() === "dark"',
+    '[class.theme-forest]': 'store.theme() === "forest"',
+    '[class.theme-cyberpunk]': 'store.theme() === "cyberpunk"',
+    '[class.theme-ocean]': 'store.theme() === "ocean"',
+    '[class.theme-sunset]': 'store.theme() === "sunset"',
+    '[class.theme-minimal]': 'store.theme() === "minimal"',
+    '[class.theme-neutral]': 'store.theme() === "neutral"',
   },
   imports: [
     CodeEditorComponent, 
@@ -35,9 +43,24 @@ export class AppComponent {
   store = inject(AppStateService);
   previewComponent = viewChild(ChartPreviewComponent);
 
+  editorExpanded = signal(false);
+  previewExpanded = signal(false);
+
   @HostListener('window:keydown.escape')
   onEscape() {
     this.store.closeAllModals();
+    this.editorExpanded.set(false);
+    this.previewExpanded.set(false);
+  }
+
+  toggleEditorExpand() {
+    this.editorExpanded.update(v => !v);
+    this.previewExpanded.set(false);
+  }
+
+  togglePreviewExpand() {
+    this.previewExpanded.update(v => !v);
+    this.editorExpanded.set(false);
   }
 
   // Import from data file

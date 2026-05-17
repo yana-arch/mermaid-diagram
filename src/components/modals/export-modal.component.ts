@@ -10,12 +10,12 @@ export type ExportFormat = 'svg' | 'png' | 'jpeg' | 'webp';
   template: `
     @if (isOpen()) {
       <div class="fixed inset-0 bg-black/70 z-50 animate-fade-in backdrop-blur-sm" (click)="close.emit()"></div>
-      <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 border border-slate-600 shadow-2xl z-50 flex flex-col animate-scale-in
-                  w-[90%] rounded-xl
-                  sm:w-full sm:max-w-md sm:rounded-2xl">
+      <div class="hybrid-modal w-full md:max-w-md">
+        <!-- Drag Handle Indicator for Mobile Bottom Sheet -->
+        <div class="h-1.5 w-12 bg-slate-600 rounded-full mx-auto my-3 shrink-0 md:hidden"></div>
         
         <!-- Header -->
-        <div class="flex justify-between items-center p-4 sm:p-5 border-b border-slate-700">
+        <div class="flex justify-between items-center px-4 pb-4 pt-2 md:pt-4 md:px-5 border-b border-slate-700 shrink-0">
           <h3 class="text-lg sm:text-xl font-bold text-white">Export Diagram</h3>
           <button (click)="close.emit()" class="text-slate-400 hover:text-white transition-colors p-1 rounded hover:bg-slate-700">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -23,7 +23,7 @@ export type ExportFormat = 'svg' | 'png' | 'jpeg' | 'webp';
         </div>
 
         <!-- Body -->
-        <div class="p-4 sm:p-6 flex-col gap-6">
+        <div class="p-4 sm:p-6 flex-1 overflow-y-auto custom-scrollbar">
           <div class="mb-6">
             <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Format</label>
             <div class="grid grid-cols-2 gap-3">
@@ -57,7 +57,7 @@ export type ExportFormat = 'svg' | 'png' | 'jpeg' | 'webp';
         </div>
 
         <!-- Footer -->
-        <div class="p-4 sm:p-5 border-t border-slate-700 bg-slate-800/50 rounded-b-xl sm:rounded-b-2xl">
+        <div class="p-4 sm:p-5 border-t border-slate-700 bg-slate-800/50 shrink-0">
           <button (click)="onExport()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold py-3 px-4 rounded-lg shadow-lg transform transition active:scale-[0.98] flex justify-center items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
             Download {{ format().toUpperCase() }}

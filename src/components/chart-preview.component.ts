@@ -1,5 +1,4 @@
-
-import { Component, ElementRef, ViewEncapsulation, input, output, viewChild, signal, effect, inject, PLATFORM_ID, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ElementRef, ViewEncapsulation, input, output, viewChild, signal, effect, inject, PLATFORM_ID, computed, ChangeDetectionStrategy, DestroyRef, HostListener } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { MermaidService } from '../services/diagram/mermaid.service';
 
@@ -15,7 +14,23 @@ import { MermaidService } from '../services/diagram/mermaid.service';
   template: `
     <div class="flex flex-col h-full">
       <div class="flex flex-wrap gap-2 sm:gap-4 justify-between items-center mb-2 shrink-0">
-        <h2 class="text-sm font-medium app-text-main xxs-hidden">Live Preview</h2>
+        <div class="flex gap-2 items-center shrink-0">
+          <h2 class="text-sm font-medium app-text-main xxs-hidden">Live Preview</h2>
+          
+          <!-- Focus Mode Toggle Button -->
+          <button
+            (click)="toggleExpand.emit()"
+            class="hidden md:flex text-xs app-text-muted hover:text-[var(--text-main)] transition-colors items-center justify-center p-1 rounded hover:bg-[var(--bg-secondary)]"
+            [title]="isExpanded() ? 'Collapse view' : 'Maximize view'"
+            [attr.aria-label]="isExpanded() ? 'Collapse view' : 'Maximize view'"
+          >
+            @if (isExpanded()) {
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6m10-6h-6v6M4 10h6V4m10 6h-6V4"/></svg>
+            } @else {
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+            }
+          </button>
+        </div>
         <ng-content select="[controls]"></ng-content>
       </div>
 
@@ -28,39 +43,49 @@ import { MermaidService } from '../services/diagram/mermaid.service';
 
       <div class="flex-1 min-h-0 border app-border rounded-lg overflow-hidden relative select-none transition-all duration-300"
            [ngClass]="containerClass()">
+        
+        <!-- Zoom Level HUD Indicator -->
+        <div class="absolute top-4 left-4 z-20 pointer-events-none bg-slate-900/60 backdrop-blur px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-mono text-slate-300 border border-slate-700/50">
+          Zoom: {{ zoomPercentage() }}%
+        </div>
+
         <!-- Controls Container -->
-          <div class="absolute bottom-4 right-4 z-20 flex flex-col gap-2">
-            <!-- Actions -->
-            <div class="flex flex-col gap-1 backdrop-blur-sm p-1.5 rounded-lg border shadow-xl transition-colors"
-                 [class]="controlsClass()">
-               <button (click)="copySvg()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
-                       [class]="buttonClass()" 
-                       [title]="copyText()"
-                       [attr.aria-label]="copyText()">
-                 @if(isCopied()) {
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-emerald-400"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                 } @else {
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                 }
-               </button>
-            </div>
-            <!-- Zoom Controls -->
-            <div class="flex flex-col gap-1 backdrop-blur-sm p-1.5 rounded-lg border shadow-xl transition-colors"
-                 [class]="controlsClass()">
-              <button (click)="zoomIn()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
-                      [class]="buttonClass()" title="Zoom In" aria-label="Zoom In">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-              </button>
-              <button (click)="resetZoom()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
-                      [class]="buttonClass()" title="Reset Zoom" aria-label="Reset Zoom">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
-              </button>
-              <button (click)="zoomOut()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
-                      [class]="buttonClass()" title="Zoom Out" aria-label="Zoom Out">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-              </button>
-            </div>
+        <div class="absolute bottom-4 right-4 z-20 flex flex-col gap-2">
+          <!-- Actions -->
+          <div class="flex flex-col gap-1 backdrop-blur-sm p-1.5 rounded-lg border shadow-xl transition-colors"
+               [class]="controlsClass()">
+             <button (click)="copySvg()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
+                     [class]="buttonClass()" 
+                     [title]="copyText()"
+                     [attr.aria-label]="copyText()">
+               @if(isCopied()) {
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-emerald-400"><polyline points="20 6 9 17 4 12"></polyline></svg>
+               } @else {
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+               }
+             </button>
           </div>
+          <!-- Zoom & Fit Controls -->
+          <div class="flex flex-col gap-1 backdrop-blur-sm p-1.5 rounded-lg border shadow-xl transition-colors"
+               [class]="controlsClass()">
+            <button (click)="zoomIn()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
+                    [class]="buttonClass()" title="Zoom In" aria-label="Zoom In">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+            </button>
+            <button (click)="autoFit()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
+                    [class]="buttonClass()" title="Auto Fit to Screen" aria-label="Auto Fit to Screen">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 15v6h-6M3 9V3h6M10 14l-7 7M14 10l7-7"/></svg>
+            </button>
+            <button (click)="resetZoom()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
+                    [class]="buttonClass()" title="Reset Zoom (100%)" aria-label="Reset Zoom">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+            </button>
+            <button (click)="zoomOut()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
+                    [class]="buttonClass()" title="Zoom Out" aria-label="Zoom Out">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+            </button>
+          </div>
+        </div>
 
         <!-- Pannable Container -->
         <div 
@@ -94,10 +119,12 @@ import { MermaidService } from '../services/diagram/mermaid.service';
 export class ChartPreviewComponent {
   code = input.required<string>();
   theme = input.required<string>();
+  isExpanded = input<boolean>(false);
   
   onRenderStart = output<void>();
   onRenderEnd = output<void>();
   onRenderError = output<string | null>();
+  toggleExpand = output<void>();
 
   chartOutput = viewChild.required<ElementRef<HTMLDivElement>>('chartOutput');
   
@@ -122,19 +149,15 @@ export class ChartPreviewComponent {
 
   controlsClass = computed(() => {
     const t = this.theme();
-    // If we are in a darkish theme, keep controls dark
     if (['default', 'dark', 'forest', 'cyberpunk', 'ocean'].includes(t)) {
        return 'bg-slate-800/90 border-slate-600';
     }
-    // Minimal specific
     if (t === 'minimal') {
       return 'bg-white border-black border-2 shadow-none';
     }
-    // If explicit light theme
     if (['neutral', 'sunset'].includes(t)) {
         return 'bg-white/90 border-slate-200';
     }
-    // Default fallback
     return 'app-bg-panel border-opacity-50 app-border'; 
   });
 
@@ -149,18 +172,43 @@ export class ChartPreviewComponent {
     return 'text-slate-600 hover:text-indigo-600 hover:bg-slate-100';
   });
 
+  // HUD zoom indicator
+  zoomPercentage = computed(() => {
+    return Math.round(this.zoomScale() * 100);
+  });
+
   // Pan & Zoom
   zoomScale = signal(1);
   panOffset = signal({ x: 0, y: 0 });
   isPanning = signal(false);
   private dragStart = { x: 0, y: 0 };
   private initialPan = { x: 0, y: 0 };
+  private initialDistance = 0;
+  private initialZoom = 1;
   private debounceTimer: any;
+  private autoFitTimer: any;
+  private copyTimer: any;
 
   private mermaidService = inject(MermaidService);
   private platformId = inject(PLATFORM_ID);
+  private destroyRef = inject(DestroyRef);
 
   constructor() {
+    this.destroyRef.onDestroy(() => {
+      clearTimeout(this.debounceTimer);
+      clearTimeout(this.autoFitTimer);
+      clearTimeout(this.copyTimer);
+    });
+
+    // Auto-fit when expanded state changes (after transition)
+    effect(() => {
+      this.isExpanded();
+      clearTimeout(this.autoFitTimer);
+      this.autoFitTimer = setTimeout(() => {
+        this.autoFit();
+      }, 350);
+    });
+
     effect(() => {
       const code = this.code();
       const theme = this.theme();
@@ -183,6 +231,12 @@ export class ChartPreviewComponent {
           const svg = await this.mermaidService.render(code, theme);
           el.innerHTML = svg;
           this.onRenderEnd.emit();
+          
+          // Auto-fit to screen after successful rendering
+          clearTimeout(this.autoFitTimer);
+          this.autoFitTimer = setTimeout(() => {
+            this.autoFit();
+          }, 150);
         } catch (e: any) {
           const msg = this.parseMermaidError(e);
           this.error.set(msg);
@@ -199,6 +253,11 @@ export class ChartPreviewComponent {
     return this.chartOutput().nativeElement.querySelector('svg');
   }
 
+  @HostListener('window:resize')
+  onResize() {
+    this.autoFit();
+  }
+
   async copySvg() {
     const svgEl = this.getSvgElement();
     if (!svgEl || !isPlatformBrowser(this.platformId)) return;
@@ -208,13 +267,41 @@ export class ChartPreviewComponent {
       await navigator.clipboard.writeText(svgData);
       this.isCopied.set(true);
       this.copyText.set('Copied!');
-      setTimeout(() => {
+      
+      clearTimeout(this.copyTimer);
+      this.copyTimer = setTimeout(() => {
         this.isCopied.set(false);
         this.copyText.set('Copy SVG Code');
       }, 2000);
     } catch (err) {
       console.error('Failed to copy SVG', err);
     }
+  }
+
+  // Auto Fit Logic
+  autoFit() {
+    const svgEl = this.getSvgElement();
+    if (!svgEl) return;
+
+    const viewBox = svgEl.viewBox.baseVal;
+    const svgWidth = viewBox?.width || svgEl.clientWidth || 300;
+    const svgHeight = viewBox?.height || svgEl.clientHeight || 300;
+
+    const container = svgEl.parentElement?.parentElement;
+    if (!container) return;
+    const containerWidth = container.clientWidth || 400;
+    const containerHeight = container.clientHeight || 400;
+
+    const padding = 24;
+    const usableWidth = containerWidth - padding;
+    const usableHeight = containerHeight - padding;
+
+    const scaleX = usableWidth / svgWidth;
+    const scaleY = usableHeight / svgHeight;
+    const scale = Math.min(scaleX, scaleY, 2.0); // Maximum 2.0x scaling to prevent blurriness
+
+    this.panOffset.set({ x: 0, y: 0 });
+    this.zoomScale.set(scale);
   }
 
   // Pan Zoom Logic
@@ -243,21 +330,37 @@ export class ChartPreviewComponent {
   // Touch Support
   onTouchStart(e: TouchEvent) {
     if (e.touches.length === 1) {
-      // Single touch - Pan
       this.isPanning.set(true);
       this.dragStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
       this.initialPan = { ...this.panOffset() };
+    } else if (e.touches.length === 2) {
+      this.isPanning.set(false);
+      this.initialDistance = this.getDistance(e.touches);
+      this.initialZoom = this.zoomScale();
     }
   }
 
   onTouchMove(e: TouchEvent) {
-    if (this.isPanning() && e.touches.length === 1) {
-      e.preventDefault(); // Prevent scrolling
+    if (e.touches.length === 1 && this.isPanning()) {
+      e.preventDefault();
       this.panOffset.set({
         x: this.initialPan.x + (e.touches[0].clientX - this.dragStart.x),
         y: this.initialPan.y + (e.touches[0].clientY - this.dragStart.y)
       });
+    } else if (e.touches.length === 2) {
+      e.preventDefault();
+      const currentDistance = this.getDistance(e.touches);
+      if (this.initialDistance > 0) {
+        const scale = currentDistance / this.initialDistance;
+        this.zoomScale.set(Math.min(Math.max(this.initialZoom * scale, 0.2), 5));
+      }
     }
+  }
+
+  private getDistance(touches: TouchList): number {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
   }
 
   onTouchEnd() {
@@ -271,3 +374,4 @@ export class ChartPreviewComponent {
     return 'Unknown syntax error.';
   }
 }
+

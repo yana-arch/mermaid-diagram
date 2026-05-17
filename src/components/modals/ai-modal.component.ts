@@ -17,12 +17,12 @@ export type AiTab = 'text' | 'url' | 'file';
   template: `
     @if (isOpen()) {
       <div class="fixed inset-0 bg-black/70 z-50 animate-fade-in backdrop-blur-sm" (click)="close.emit()"></div>
-      <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 border border-indigo-500/50 shadow-2xl z-50 flex flex-col animate-scale-in
-                  w-[95%] rounded-xl max-h-[90vh]
-                  sm:w-full sm:max-max-lg sm:rounded-2xl sm:max-w-lg">
+      <div class="hybrid-modal w-full md:max-w-lg">
+        <!-- Drag Handle Indicator for Mobile Bottom Sheet -->
+        <div class="h-1.5 w-12 bg-slate-600 rounded-full mx-auto my-3 shrink-0 md:hidden"></div>
         
         <!-- Header -->
-        <div class="flex justify-between items-center p-4 sm:p-5 border-b border-slate-700 shrink-0">
+        <div class="flex justify-between items-center px-4 pb-4 pt-2 md:pt-4 md:px-5 border-b border-slate-700 shrink-0">
           <div class="flex items-center gap-2">
              <svg class="text-indigo-400" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/></svg>
              <h3 class="text-lg sm:text-xl font-bold text-white">
@@ -82,7 +82,7 @@ export type AiTab = 'text' | 'url' | 'file';
           }
         </div>
   
-        <div class="p-4 sm:p-5 border-t border-slate-700 bg-slate-800/50 rounded-b-xl sm:rounded-b-2xl flex justify-end gap-3 shrink-0">
+        <div class="p-4 sm:p-5 border-t border-slate-700 bg-slate-800/50 flex justify-end gap-3 shrink-0">
           <button (click)="close.emit()" [disabled]="isAiLoading()" class="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors disabled:opacity-50">Cancel</button>
           <button (click)="generate()" [disabled]="isAiLoading()" class="bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/50 text-white font-bold py-2 px-6 rounded-lg shadow-md flex items-center gap-2 transition-all">
              @if (isAiLoading()) {
