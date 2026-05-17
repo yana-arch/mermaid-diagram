@@ -1,11 +1,12 @@
 
-import { Component, input, output, viewChild, ElementRef, signal } from '@angular/core';
+import { Component, input, output, viewChild, ElementRef, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-ai-tab-url',
   standalone: true,
   imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="space-y-4">
       <div>

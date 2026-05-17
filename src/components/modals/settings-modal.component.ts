@@ -1,14 +1,15 @@
 
-import { Component, input, output, inject, signal, effect, ChangeDetectorRef } from '@angular/core';
+import { Component, input, output, inject, signal, effect, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AppStateService, AiConfig } from '../../services/app-state.service';
-import { GeminiService, AiModelInfo } from '../../services/gemini.service';
+import { AppStateService, AiConfig } from '../../services/core/app-state.service';
+import { GeminiService, AiModelInfo } from '../../services/ai/gemini.service';
 import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-settings-modal',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (isOpen()) {
       <div class="fixed inset-0 bg-black/70 z-50 animate-fade-in backdrop-blur-sm" (click)="close.emit()"></div>

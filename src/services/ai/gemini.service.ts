@@ -46,63 +46,60 @@ export class GeminiService {
     });
 
     const systemInstruction = this.getSystemInstruction(input.contextCode);
+    const parts: any[] = [{ text: input.prompt }];
+
+    if (input.media) {
+      parts.push({
+        inlineData: {
+          mimeType: input.media.mimeType,
+          data: input.media.data
+        }
+      });
+    }
+
+    // Prepare configuration
+    const generationConfig: any = {
+      temperature: 0.2,
+    };
+
+    // Handle Thinking Config (Only for supported models like gemini-2.0-flash-thinking-exp-1219)
+    if (config.model.includes('thinking') && config.thinkingBudget && config.thinkingBudget > 0) {
+        generationConfig.thinkingConfig = { thinkingBudget: config.thinkingBudget };
+    }
 
     try {
-      const parts: any[] = [{ text: input.prompt }];
-
-      if (input.media) {
-        parts.push({
-          inlineData: {
-            mimeType: input.media.mimeType,
-            data: input.media.data
-          }
-        });
-      }
-
-      // Prepare configuration
-      const generationConfig: any = {
-        temperature: 0.2,
-      };
-
-      // Handle Thinking Config (Only for supported models like gemini-2.5-flash)
-      if (config.model.includes('gemini-2.5-flash') && config.thinkingBudget && config.thinkingBudget > 0) {
-         generationConfig.thinkingConfig = { thinkingBudget: config.thinkingBudget };
-      }
-
-      // USE FETCH FOR CUSTOM URL (Bypass SDK)
       if (config.useCustomUrl && config.baseUrl && config.baseUrl.trim().length > 0) {
-          return this.retry(() => this.generateWithFetch(config, systemInstruction, parts, generationConfig));
+          return await this.retry(() => this.generateWithFetch(config, systemInstruction, parts, generationConfig));
       }
 
-      // USE SDK FOR STANDARD CALLS
-      const clientOptions: any = { 
-        apiKey: config.apiKey
-      };
-      
-      if (config.apiVersion) {
-        clientOptions.apiVersion = config.apiVersion;
-      }
-
-      const ai = new GoogleGenAI(clientOptions);
-
-      const response = await this.retry(async () => {
-        const result = await ai.models.generateContent({
-          model: config.model || 'gemini-2.5-flash',
-          contents: [{ parts }],
-          config: {
-              ...generationConfig,
-              systemInstruction: systemInstruction
-          }
-        });
-        return result;
-      });
-
-      const rawText = response.text || '';
-      return this.cleanResponse(rawText);
+      return await this.retry(() => this.generateWithSdk(config, systemInstruction, parts, generationConfig));
     } catch (error: any) {
       console.error('Gemini API Error:', error);
       throw new Error(error.message || 'Failed to generate diagram from AI.');
     }
+  }
+
+  private async generateWithSdk(config: AiRequestConfig, systemInstruction: string, parts: any[], generationConfig: any): Promise<string> {
+    const clientOptions: any = { 
+      apiKey: config.apiKey
+    };
+    
+    if (config.apiVersion) {
+      clientOptions.apiVersion = config.apiVersion;
+    }
+
+    const ai = new GoogleGenAI(clientOptions);
+    const result = await ai.models.generateContent({
+      model: config.model || 'gemini-2.5-flash',
+      contents: [{ parts }],
+      config: {
+          ...generationConfig,
+          systemInstruction: systemInstruction
+      }
+    });
+
+    const rawText = result.text || '';
+    return this.cleanResponse(rawText);
   }
 
   private getSystemInstruction(contextCode?: string): string {

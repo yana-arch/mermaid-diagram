@@ -1,6 +1,6 @@
 
 import { Component, ChangeDetectionStrategy, viewChild, inject, ViewEncapsulation, HostListener } from '@angular/core';
-import { AppStateService, HistoryItem } from './services/app-state.service';
+import { AppStateService, HistoryItem } from './services/core/app-state.service';
 import { CodeEditorComponent } from './components/code-editor.component';
 import { ChartPreviewComponent } from './components/chart-preview.component';
 import { AppToolbarComponent } from './components/app-toolbar.component';

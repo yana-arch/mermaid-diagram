@@ -1,8 +1,8 @@
 
-import { Component, ElementRef, inject, input, output, signal, viewChild, effect } from '@angular/core';
+import { Component, ElementRef, inject, input, output, signal, viewChild, effect, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { GeminiService, AiInputData } from '../../services/gemini.service';
-import { AiMode, AppStateService } from '../../services/app-state.service';
+import { GeminiService, AiInputData } from '../../services/ai/gemini.service';
+import { AiMode, AppStateService } from '../../services/core/app-state.service';
 import { AiTabDescribeComponent } from './ai-tab-describe.component';
 import { AiTabUrlComponent } from './ai-tab-url.component';
 import { AiTabFileComponent } from './ai-tab-file.component';
@@ -13,6 +13,7 @@ export type AiTab = 'text' | 'url' | 'file';
   selector: 'app-ai-modal',
   standalone: true,
   imports: [CommonModule, AiTabDescribeComponent, AiTabUrlComponent, AiTabFileComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (isOpen()) {
       <div class="fixed inset-0 bg-black/70 z-50 animate-fade-in backdrop-blur-sm" (click)="close.emit()"></div>

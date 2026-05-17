@@ -1,12 +1,13 @@
 
-import { Component, input, output, computed, signal, effect } from '@angular/core';
+import { Component, input, output, computed, signal, effect, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { HistoryItem } from '../../services/app-state.service';
+import { HistoryItem } from '../../services/core/app-state.service';
 
 @Component({
   selector: 'app-history-modal',
   standalone: true,
   imports: [CommonModule, DatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (isOpen()) {
       <div class="fixed inset-0 bg-black/60 z-40 animate-fade-in backdrop-blur-sm" (click)="close.emit()"></div>

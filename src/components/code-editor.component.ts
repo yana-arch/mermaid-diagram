@@ -9,6 +9,7 @@ import {
   inject,
   PLATFORM_ID,
   signal,
+  ChangeDetectionStrategy,
 } from "@angular/core";
 import { isPlatformBrowser } from "@angular/common";
 import Prism from "prismjs";
@@ -16,6 +17,7 @@ import Prism from "prismjs";
 @Component({
   selector: "app-code-editor",
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: {
     class: "flex flex-col h-full",

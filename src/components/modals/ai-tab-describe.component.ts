@@ -1,11 +1,12 @@
 
-import { Component, input, output, viewChild, ElementRef } from '@angular/core';
+import { Component, input, output, viewChild, ElementRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-ai-tab-describe',
   standalone: true,
   imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="space-y-2">
       <label class="block text-sm font-medium text-slate-300">

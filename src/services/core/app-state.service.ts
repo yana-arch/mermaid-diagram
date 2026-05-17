@@ -23,7 +23,7 @@ export interface HistoryItem {
   label?: string;
 }
 
-const INITIAL_CODE = `graph TD
+export const INITIAL_CODE = `graph TD
     A[Start] --> B{Is it responsive?};
     B -- Yes --> C[Looks great on mobile!];
     B -- No --> D[Add Tailwind classes];
@@ -31,7 +31,7 @@ const INITIAL_CODE = `graph TD
     D -- Refactor --> B;
     E --> F(Celebrate 🎉);`;
 
-const DEFAULT_AI_CONFIG: AiConfig = {
+export const DEFAULT_AI_CONFIG: AiConfig = {
   apiKey: '', // Empty by default, user must provide
   useCustomUrl: false,
   customUrl: '',

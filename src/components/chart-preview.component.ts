@@ -1,12 +1,13 @@
 
-import { Component, ElementRef, ViewEncapsulation, input, output, viewChild, signal, effect, inject, PLATFORM_ID, computed } from '@angular/core';
+import { Component, ElementRef, ViewEncapsulation, input, output, viewChild, signal, effect, inject, PLATFORM_ID, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { MermaidService } from '../services/mermaid.service';
+import { MermaidService } from '../services/diagram/mermaid.service';
 
 @Component({
   selector: 'app-chart-preview',
   standalone: true,
   imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   host: {
     class: 'block h-full'
