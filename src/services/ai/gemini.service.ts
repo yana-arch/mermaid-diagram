@@ -104,13 +104,20 @@ export class GeminiService {
 
   private getSystemInstruction(contextCode?: string): string {
     let instruction = `
-      You are an expert in Mermaid.js diagramming syntax.
-      Your task is to generate or update Mermaid.js code based on the user's request.
+      You are an expert in Mermaid.js (v11.12.3) diagramming syntax.
+      Your task is to generate or update valid, clean, and error-free Mermaid.js code based on the user's request.
       
-      Rules:
-      1. Return ONLY the code. Do not include markdown code fences (like \`\`\`mermaid).
-      2. Do not include explanations or conversational text.
-      3. Ensure syntax is valid and error-free.
+      CRITICAL RULES FOR SYNTAX STABILITY (Mermaid v11.12.3):
+      1. Return ONLY the raw code. Do not include markdown code fences (like \`\`\`mermaid or \`\`\`), HTML tags, or conversational/explanation texts.
+      2. Ensure syntax is fully valid and error-free.
+      3. Flowchart Syntax:
+         - Always use the 'flowchart' keyword (e.g., flowchart TD, flowchart LR) instead of the obsolete 'graph' keyword.
+         - Node IDs: Use simple alphanumeric/underscore strings (e.g., node1, step_A). Never use spaces or special characters in Node IDs.
+         - Node Labels: If a label contains spaces, brackets [], parentheses (), curly braces {}, quotes, mathematical symbols, or punctuation, you MUST wrap the entire label in double quotes (e.g., node1["Label with (text) and [brackets]"]).
+         - Escaping Characters: Do not use raw # or ; inside labels. Use HTML entity code '#35;' for # and '#59;' for ;. If double quotes are needed inside double-quoted labels, escape them with '#quot;'.
+         - Reserved Keywords: Do not use keywords like 'end', 'subgraph', 'style', 'click' as Node IDs. If 'end' or other keywords are needed inside a label, capitalize them (e.g., END) or enclose the label in double quotes (e.g., node2["end"]).
+         - Arrows and Connections: Ensure arrows are standard (e.g., -->, ---, -.->, ==>). In flowcharts, keep spaces around connectors to avoid ambiguity (e.g., 'A --- o B' instead of 'A---oB', as characters like 'o' or 'x' touching lines can break rendering).
+      4. Subgraphs: Ensure every 'subgraph' has a unique ID and is explicitly closed with 'end'.
     `;
 
     if (contextCode) {
@@ -256,7 +263,20 @@ export class GeminiService {
 
   private cleanResponse(text: string): string {
     let clean = text.trim();
-    clean = clean.replace(/^```(mermaid)?/i, '').replace(/```$/, '');
+    
+    // Attempt to extract content between triple backticks (with or without 'mermaid' identifier)
+    const fenceMatch = clean.match(/```(?:mermaid)?\s*([\s\S]*?)\s*```/i);
+    if (fenceMatch && fenceMatch[1]) {
+      clean = fenceMatch[1];
+    } else {
+      // Fallback standard replacement if only starting or ending fences are present
+      clean = clean.replace(/^```(mermaid)?/i, '').replace(/```$/, '');
+    }
+    
+    // Strip HTML pre/code wrappers if the AI accidentally added them
+    clean = clean.replace(/<pre[^>]*>([\s\S]*?)<\/pre>/i, '$1');
+    clean = clean.replace(/<code[^>]*>([\s\S]*?)<\/code>/i, '$1');
+    
     return clean.trim();
   }
 }

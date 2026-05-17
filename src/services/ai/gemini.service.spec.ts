@@ -41,6 +41,16 @@ describe('GeminiService', () => {
     const rawResponseNoMermaid = '```\ngraph TD\n  A-->B\n```';
     const cleaned2 = (service as any).cleanResponse(rawResponseNoMermaid);
     expect(cleaned2).toBe('graph TD\n  A-->B');
+
+    // Test with conversational padding before/after
+    const paddedResponse = 'Here is the diagram:\n```mermaid\nflowchart LR\n  X --> Y\n```\nHope this helps!';
+    const cleanedPadded = (service as any).cleanResponse(paddedResponse);
+    expect(cleanedPadded).toBe('flowchart LR\n  X --> Y');
+
+    // Test with HTML code/pre wrappers
+    const htmlResponse = '<pre><code>flowchart TD\n  1 --> 2</code></pre>';
+    const cleanedHtml = (service as any).cleanResponse(htmlResponse);
+    expect(cleanedHtml).toBe('flowchart TD\n  1 --> 2');
   });
 
   it('should throw error if API key is missing', async () => {
