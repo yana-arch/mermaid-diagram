@@ -225,7 +225,7 @@ export class CodeEditorComponent {
 
   private platformId = inject(PLATFORM_ID);
   private destroyRef = inject(DestroyRef);
-  private copyTimeout: any;
+  private copyTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     this.destroyRef.onDestroy(() => {

@@ -200,9 +200,9 @@ export class ChartPreviewComponent {
   private initialPan = { x: 0, y: 0 };
   private initialDistance = 0;
   private initialZoom = 1;
-  private debounceTimer: any;
-  private autoFitTimer: any;
-  private copyTimer: any;
+  private debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private autoFitTimer: ReturnType<typeof setTimeout> | null = null;
+  private copyTimer: ReturnType<typeof setTimeout> | null = null;
 
   private mermaidService = inject(MermaidService);
   private platformId = inject(PLATFORM_ID);
@@ -210,15 +210,15 @@ export class ChartPreviewComponent {
 
   constructor() {
     this.destroyRef.onDestroy(() => {
-      clearTimeout(this.debounceTimer);
-      clearTimeout(this.autoFitTimer);
-      clearTimeout(this.copyTimer);
+      if (this.debounceTimer) clearTimeout(this.debounceTimer);
+      if (this.autoFitTimer) clearTimeout(this.autoFitTimer);
+      if (this.copyTimer) clearTimeout(this.copyTimer);
     });
 
     // Auto-fit when expanded state changes (after transition)
     effect(() => {
       this.isExpanded();
-      clearTimeout(this.autoFitTimer);
+      if (this.autoFitTimer) clearTimeout(this.autoFitTimer);
       this.autoFitTimer = setTimeout(() => {
         this.autoFit();
       }, 350);
@@ -231,7 +231,7 @@ export class ChartPreviewComponent {
 
       if (!isPlatformBrowser(this.platformId)) return;
 
-      clearTimeout(this.debounceTimer);
+      if (this.debounceTimer) clearTimeout(this.debounceTimer);
       if (code.trim()) {
         this.isRendering.set(true);
       }
@@ -251,13 +251,13 @@ export class ChartPreviewComponent {
           el.innerHTML = svg;
           this.onRenderEnd.emit();
           this.isRendering.set(false);
-          
+
           // Auto-fit to screen after successful rendering
-          clearTimeout(this.autoFitTimer);
+          if (this.autoFitTimer) clearTimeout(this.autoFitTimer);
           this.autoFitTimer = setTimeout(() => {
             this.autoFit();
           }, 150);
-        } catch (e: any) {
+        } catch (e: unknown) {
           const msg = this.parseMermaidError(e);
           this.error.set(msg);
           this.onRenderError.emit(msg);
@@ -282,14 +282,14 @@ export class ChartPreviewComponent {
   async copySvg() {
     const svgEl = this.getSvgElement();
     if (!svgEl || !isPlatformBrowser(this.platformId)) return;
-    
+
     try {
       const svgData = new XMLSerializer().serializeToString(svgEl);
       await navigator.clipboard.writeText(svgData);
       this.isCopied.set(true);
       this.copyText.set('Copied!');
-      
-      clearTimeout(this.copyTimer);
+
+      if (this.copyTimer) clearTimeout(this.copyTimer);
       this.copyTimer = setTimeout(() => {
         this.isCopied.set(false);
         this.copyText.set('Copy SVG Code');
@@ -388,10 +388,13 @@ export class ChartPreviewComponent {
     this.isPanning.set(false);
   }
 
-  private parseMermaidError(error: any): string {
+  private parseMermaidError(error: unknown): string {
     if (typeof error === 'string') return error;
-    if (error?.message) return error.message;
-    if (error?.str) return error.str;
+    if (error && typeof error === 'object') {
+      const err = error as { message?: string; str?: string };
+      if (err.message) return err.message;
+      if (err.str) return err.str;
+    }
     return 'Unknown syntax error.';
   }
 }

@@ -203,7 +203,7 @@ export class AiCopilotComponent {
   }
 
   closeCopilot() {
-    this.store.isAiModalOpen.set(false);
+    this.store.closeAllModals();
   }
 
   async generate() {

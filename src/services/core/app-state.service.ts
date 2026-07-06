@@ -1,6 +1,7 @@
 
 import { Injectable, signal, effect, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { ModalService } from './modal.service';
 
 const THEMES = ['default', 'neutral', 'dark', 'forest', 'cyberpunk', 'ocean', 'sunset', 'minimal'] as const;
 export type Theme = (typeof THEMES)[number];
@@ -23,13 +24,9 @@ export interface HistoryItem {
   label?: string;
 }
 
-export const INITIAL_CODE = `graph TD
-    A[Start] --> B{Is it responsive?};
-    B -- Yes --> C[Looks great on mobile!];
-    B -- No --> D[Add Tailwind classes];
-    C --> E[Finish Project];
-    D -- Refactor --> B;
-    E --> F(Celebrate 🎉);`;
+import { INITIAL_CODE as INITIAL_CODE } from '../../data/initial-code';
+
+export { INITIAL_CODE } from '../../data/initial-code';
 
 export const DEFAULT_AI_CONFIG: AiConfig = {
   apiKey: '', // Empty by default, user must provide
@@ -45,6 +42,7 @@ export const DEFAULT_AI_CONFIG: AiConfig = {
 })
 export class AppStateService {
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly modalService = inject(ModalService);
 
   // State Signals
   readonly mermaidCode = signal<string>(INITIAL_CODE);
@@ -59,15 +57,15 @@ export class AppStateService {
 
   // History State
   readonly history = signal<HistoryItem[]>([]);
-  readonly isHistoryModalOpen = signal(false);
+  readonly isHistoryModalOpen = this.modalService.isHistoryOpen;
 
   // Modal State Signals
-  readonly isAiModalOpen = signal(false);
+  readonly isAiModalOpen = this.modalService.isAiOpen;
   readonly aiModalMode = signal<AiMode>('generate');
-  
-  readonly isExampleModalOpen = signal(false);
-  readonly isExportModalOpen = signal(false);
-  readonly isSettingsModalOpen = signal(false);
+
+  readonly isExampleModalOpen = this.modalService.isExampleOpen;
+  readonly isExportModalOpen = this.modalService.isExportOpen;
+  readonly isSettingsModalOpen = this.modalService.isSettingsOpen;
 
   // Status Signals
   readonly isRendering = signal(false);
@@ -156,12 +154,28 @@ export class AppStateService {
 
   loadFromHistory(item: HistoryItem) {
     this.setCode(item.code);
-    this.isHistoryModalOpen.set(false);
+    this.modalService.close();
   }
 
   openAiModal(mode: AiMode) {
     this.aiModalMode.set(mode);
-    this.isAiModalOpen.set(true);
+    this.modalService.open('ai');
+  }
+
+  openSettingsModal() {
+    this.modalService.open('settings');
+  }
+
+  openHistoryModal() {
+    this.modalService.open('history');
+  }
+
+  openExampleModal() {
+    this.modalService.open('example');
+  }
+
+  openExportModal() {
+    this.modalService.open('export');
   }
 
   setCode(code: string) {
@@ -177,11 +191,7 @@ export class AppStateService {
   }
 
   closeAllModals() {
-    this.isHistoryModalOpen.set(false);
-    this.isAiModalOpen.set(false);
-    this.isExampleModalOpen.set(false);
-    this.isExportModalOpen.set(false);
-    this.isSettingsModalOpen.set(false);
+    this.modalService.close();
     this.proposedCode.set(null);
   }
   

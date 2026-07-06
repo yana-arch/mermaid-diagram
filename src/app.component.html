@@ -13,7 +13,7 @@
         <p class="hidden sm:block mt-2 text-lg app-text-muted">Instantly visualize your Mermaid diagrams.</p>
       </div>
 
-      <button (click)="store.isSettingsModalOpen.set(true)" class="p-2 app-text-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-secondary)] rounded-lg transition-all" title="Settings">
+      <button (click)="store.openSettingsModal()" class="p-2 app-text-muted hover:text-[var(--text-main)] hover:bg-[var(--bg-secondary)] rounded-lg transition-all" title="Settings">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" sm:width="24" sm:height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
       </button>
     </header>
@@ -81,7 +81,7 @@
                 <span class="sm:hidden">AI</span>
               </button>
               
-              <button (click)="store.isExampleModalOpen.set(true)" class="text-xs app-btn transition-colors px-2 sm:px-3 py-1.5 rounded-md flex items-center gap-1.5 border app-border shrink-0">
+              <button (click)="store.openExampleModal()" class="text-xs app-btn transition-colors px-2 sm:px-3 py-1.5 rounded-md flex items-center gap-1.5 border app-border shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                 <span class="hidden sm:inline">Examples</span>
               </button>
@@ -93,7 +93,7 @@
                 <span class="hidden sm:inline">Save</span>
               </button>
 
-              <button (click)="store.isHistoryModalOpen.set(true)" class="text-xs app-btn transition-colors px-2 sm:px-3 py-1.5 rounded-md flex items-center gap-1.5 border app-border shrink-0" title="View History">
+              <button (click)="store.openHistoryModal()" class="text-xs app-btn transition-colors px-2 sm:px-3 py-1.5 rounded-md flex items-center gap-1.5 border app-border shrink-0" title="View History">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                 <span class="hidden sm:inline">History</span>
               </button>
@@ -130,7 +130,7 @@
               [isRendering]="store.isRendering()"
               [disabledExport]="!!store.renderError() || !store.mermaidCode().trim()"
               (themeChange)="store.setTheme($event)"
-              (openExport)="store.isExportModalOpen.set(true)"
+              (openExport)="store.openExportModal()"
             ></app-toolbar>
           </app-chart-preview>
         </div>
@@ -151,25 +151,25 @@
   <app-example-modal
     [isOpen]="store.isExampleModalOpen()"
     [examples]="chartExamples"
-    (close)="store.isExampleModalOpen.set(false)"
+    (close)="store.closeAllModals()"
     (select)="handleExampleLoad($event)"
   ></app-example-modal>
 
   <app-export-modal
     [isOpen]="store.isExportModalOpen()"
-    (close)="store.isExportModalOpen.set(false)"
+    (close)="store.closeAllModals()"
     (confirm)="handleExport($event)"
   ></app-export-modal>
 
   <app-settings-modal
     [isOpen]="store.isSettingsModalOpen()"
-    (close)="store.isSettingsModalOpen.set(false)"
+    (close)="store.closeAllModals()"
   ></app-settings-modal>
 
   <app-history-modal
     [isOpen]="store.isHistoryModalOpen()"
     [history]="store.history()"
-    (close)="store.isHistoryModalOpen.set(false)"
+    (close)="store.closeAllModals()"
     (load)="handleHistoryLoad($event)"
     (delete)="store.deleteFromHistory($event)"
   ></app-history-modal>

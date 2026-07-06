@@ -25,6 +25,33 @@ export interface AiModelInfo {
   displayName: string;
 }
 
+export interface GeminiPart {
+  text?: string;
+  inlineData?: {
+    mimeType: string;
+    data: string;
+  };
+}
+
+export interface GeminiContent {
+  role?: string;
+  parts: GeminiPart[];
+}
+
+export interface GeminiGenerationConfig {
+  temperature?: number;
+  thinkingConfig?: {
+    thinkingBudget: number;
+  };
+}
+
+export interface GeminiGenerateContentRequest {
+  model?: string;
+  contents: GeminiContent[];
+  systemInstruction?: string | { parts: GeminiPart[] };
+  generationConfig?: GeminiGenerationConfig;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -32,21 +59,24 @@ export class GeminiService {
   
   constructor() {}
 
+  /**
+   * Generates Mermaid diagram code from a natural language prompt using Google Gemini.
+   *
+   * Supports both direct Google API calls and custom proxy URLs.
+   * Includes retry logic with exponential backoff for transient failures.
+   *
+   * @param input - The prompt, optional context code, and optional media input
+   * @param config - API configuration including key, model, and optional custom endpoint
+   * @returns Generated Mermaid diagram code as a string
+   * @throws Error if API key is missing or generation fails after retries
+   */
   async generateMermaidCode(input: AiInputData, config: AiRequestConfig): Promise<string> {
     if (!config.apiKey) {
       throw new Error('API Key is missing. Please configure it in Settings.');
     }
 
-    // DEBUGGING: Log the configuration being used
-    console.log('[GeminiService] Initializing request:', {
-      model: config.model,
-      hasApiKey: !!config.apiKey,
-      baseUrl: config.baseUrl ? config.baseUrl : '(Default Google Endpoint)',
-      thinkingBudget: config.thinkingBudget
-    });
-
     const systemInstruction = this.getSystemInstruction(input.contextCode);
-    const parts: any[] = [{ text: input.prompt }];
+    const parts: GeminiPart[] = [{ text: input.prompt }];
 
     if (input.media) {
       parts.push({
@@ -58,7 +88,7 @@ export class GeminiService {
     }
 
     // Prepare configuration
-    const generationConfig: any = {
+    const generationConfig: GeminiGenerationConfig = {
       temperature: 0.2,
     };
 
@@ -73,33 +103,29 @@ export class GeminiService {
       }
 
       return await this.retry(() => this.generateWithSdk(config, systemInstruction, parts, generationConfig));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Gemini API Error:', error);
-      throw new Error(error.message || 'Failed to generate diagram from AI.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate diagram from AI.';
+      throw new Error(errorMessage);
     }
   }
 
-  private async generateWithSdk(config: AiRequestConfig, systemInstruction: string, parts: any[], generationConfig: any): Promise<string> {
-    const clientOptions: any = { 
-      apiKey: config.apiKey
-    };
-    
-    if (config.apiVersion) {
-      clientOptions.apiVersion = config.apiVersion;
-    }
+  private async generateWithSdk(config: AiRequestConfig, systemInstruction: string, parts: GeminiPart[], generationConfig: GeminiGenerationConfig): Promise<string> {
+    const ai = new GoogleGenAI({
+        apiKey: config.apiKey
+    });
 
-    const ai = new GoogleGenAI(clientOptions);
     const result = await ai.models.generateContent({
-      model: config.model || 'gemini-2.5-flash',
-      contents: [{ parts }],
+      model: config.model || 'gemini-1.5-flash',
+      contents: [{ role: 'user', parts }],
       config: {
-          ...generationConfig,
-          systemInstruction: systemInstruction
+        ...generationConfig,
+        systemInstruction: systemInstruction
       }
     });
 
-    const rawText = result.text || '';
-    return this.cleanResponse(rawText);
+    const text = result.text || '';
+    return this.cleanResponse(text);
   }
 
   private getSystemInstruction(contextCode?: string): string {
@@ -143,9 +169,10 @@ export class GeminiService {
   private async retry<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> {
     try {
       return await fn();
-    } catch (error: any) {
-      const status = error.status || error.response?.status;
-      if (retries > 0 && (status === 429 || status >= 500 || error.message?.includes('fetch failed'))) {
+    } catch (error: unknown) {
+      const err = error as { status?: number; response?: { status?: number }; message?: string };
+      const status = err.status || err.response?.status;
+      if (retries > 0 && (status === 429 || status >= 500 || err.message?.includes('fetch failed'))) {
         console.warn(`[GeminiService] Retrying... (${retries} left)`);
         await new Promise(res => setTimeout(res, delay));
         return this.retry(fn, retries - 1, delay * 2);
@@ -154,13 +181,13 @@ export class GeminiService {
     }
   }
 
-  private async generateWithFetch(config: AiRequestConfig, systemInstruction: string, parts: any[], generationConfig: any): Promise<string> {
+  private async generateWithFetch(config: AiRequestConfig, systemInstruction: string, parts: GeminiPart[], generationConfig: GeminiGenerationConfig): Promise<string> {
       const apiVersion = config.apiVersion || 'v1beta';
       // Strip trailing slash from baseUrl
       const baseUrl = config.baseUrl!.replace(/\/$/, '');
       const url = `${baseUrl}/${apiVersion}/models/${config.model}:generateContent`;
-      
-      const body = {
+
+      const body: GeminiGenerateContentRequest = {
         contents: [{
             role: 'user',
             parts: parts
@@ -171,8 +198,6 @@ export class GeminiService {
         generationConfig: generationConfig
       };
 
-      console.log('[GeminiService] Custom Fetch URL:', url);
-
       try {
           const response = await fetch(url, {
               method: 'POST',
@@ -182,78 +207,87 @@ export class GeminiService {
               },
               body: JSON.stringify(body)
           });
-          
+
           if (!response.ok) {
               const errorText = await response.text();
               console.error('Fetch error body:', errorText);
               throw new Error(`API Error: ${response.status} ${response.statusText}`);
           }
-          
+
           const data = await response.json();
           // Extract text from candidates
           const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
           return this.cleanResponse(text);
-      } catch (e: any) {
+      } catch (e: unknown) {
           console.error('Custom API Fetch Error', e);
-          throw new Error(e.message || 'Failed to generate with custom URL');
+          const message = e instanceof Error ? e.message : 'Failed to generate with custom URL';
+          throw new Error(message);
       }
   }
 
+  /**
+   * Lists available Gemini models from the API or custom endpoint.
+   *
+   * Fetches the list of models that can be used for diagram generation.
+   * Handles both direct Google API and custom proxy configurations.
+   *
+   * @param config - API configuration including key and optional custom endpoint
+   * @returns Array of model information objects with id and displayName
+   */
   async listModels(config: AiRequestConfig): Promise<AiModelInfo[]> {
       let baseUrl = config.useCustomUrl && config.baseUrl ? config.baseUrl : 'https://generativelanguage.googleapis.com';
-      
+
       const apiVersion = config.apiVersion || 'v1beta';
       baseUrl = baseUrl.replace(/\/$/, '');
       const url = `${baseUrl}/${apiVersion}/models?key=${config.apiKey}`;
-      
+
       try {
-          console.log('[GeminiService] Fetching models from:', url);
           // Use fetch without custom headers for Google API to avoid CORS preflight issues
-          const headers: any = { 'Content-Type': 'application/json' };
-          
+          const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+
           // Only add API key header if using a custom proxy that might require it (not Google directly)
           if (config.useCustomUrl) {
               headers['x-goog-api-key'] = config.apiKey;
           } else {
               // For direct Google calls, the key is in the URL.
-              // We remove Content-Type to make it a "simple request" if possible, 
+              // We remove Content-Type to make it a "simple request" if possible,
               // but keeping it is usually fine for GET.
-              delete headers['Content-Type']; 
+              delete headers['Content-Type'];
           }
 
           const response = await fetch(url, {
               method: 'GET',
               headers: Object.keys(headers).length > 0 ? headers : undefined
           });
-          
+
           if (!response.ok) {
               console.warn('Failed to fetch models:', response.statusText);
               return [];
           }
-          
+
           const data = await response.json();
           let models: AiModelInfo[] = [];
 
           // Google format: { models: [{ name: 'models/gemini-pro' }] }
           if (data.models && Array.isArray(data.models)) {
-              models = data.models
-                  .filter((m: any) => !m.supportedGenerationMethods || m.supportedGenerationMethods.includes('generateContent'))
-                  .map((m: any) => {
+              models = (data.models as Array<{ name: string; displayName?: string; supportedGenerationMethods?: string[] }>)
+                  .filter(m => !m.supportedGenerationMethods || m.supportedGenerationMethods.includes('generateContent'))
+                  .map(m => {
                       const id = m.name.replace(/^models\//, '');
                       return {
                           id: id,
                           displayName: m.displayName ? `${m.displayName} (${id})` : id
                       };
                   });
-          } 
+          }
           // OpenAI / Generic format: { data: [{ id: 'gemini-pro' }] }
           else if (data.data && Array.isArray(data.data)) {
-              models = data.data.map((m: any) => ({
+              models = (data.data as Array<{ id: string }>).map(m => ({
                   id: m.id,
                   displayName: m.id
               }));
           }
-          
+
           return models;
       } catch (e) {
           console.error('Failed to list models', e);
