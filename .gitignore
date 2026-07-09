@@ -691,3 +691,5 @@ fabric.properties
 # android/*
 .agents/*
 scratch/
+memory/
+.serena/

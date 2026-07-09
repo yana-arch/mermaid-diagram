@@ -1,29 +1,15 @@
 
 import { Injectable } from '@angular/core';
 import { GoogleGenAI } from "@google/genai";
+import {
+  IAiProvider,
+  AiInputData,
+  AiRequestConfig,
+  AiModelInfo,
+} from './ai-provider.interface';
 
-export interface AiInputData {
-  prompt: string; 
-  contextCode?: string; 
-  media?: {
-    mimeType: string;
-    data: string;
-  };
-}
-
-export interface AiRequestConfig {
-  apiKey: string;
-  useCustomUrl?: boolean;
-  baseUrl?: string;
-  model: string;
-  thinkingBudget?: number;
-  apiVersion?: string;
-}
-
-export interface AiModelInfo {
-  id: string;
-  displayName: string;
-}
+// Re-export provider types so existing imports keep working
+export type { AiInputData, AiRequestConfig, AiModelInfo } from './ai-provider.interface';
 
 export interface GeminiPart {
   text?: string;
@@ -55,8 +41,8 @@ export interface GeminiGenerateContentRequest {
 @Injectable({
   providedIn: 'root',
 })
-export class GeminiService {
-  
+export class GeminiService implements IAiProvider {
+
   constructor() {}
 
   /**
@@ -92,9 +78,14 @@ export class GeminiService {
       temperature: 0.2,
     };
 
-    // Handle Thinking Config (Only for supported models like gemini-2.0-flash-thinking-exp-1219)
-    if (config.model.includes('thinking') && config.thinkingBudget && config.thinkingBudget > 0) {
-        generationConfig.thinkingConfig = { thinkingBudget: config.thinkingBudget };
+    // Thinking config for models that support it (2.5 family, *thinking* variants)
+    const modelLower = (config.model || '').toLowerCase();
+    const supportsThinking =
+      modelLower.includes('thinking') ||
+      modelLower.includes('2.5') ||
+      modelLower.includes('2.0-flash');
+    if (supportsThinking && config.thinkingBudget && config.thinkingBudget > 0) {
+      generationConfig.thinkingConfig = { thinkingBudget: config.thinkingBudget };
     }
 
     try {

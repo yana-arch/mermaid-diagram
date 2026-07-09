@@ -1,7 +1,8 @@
 
 import { Component, input, output, signal, ChangeDetectionStrategy } from '@angular/core';
+import { ExportFormat } from '../../services/core/export.service';
 
-export type ExportFormat = 'svg' | 'png' | 'jpeg' | 'webp';
+export type { ExportFormat };
 
 @Component({
   selector: 'app-export-modal',

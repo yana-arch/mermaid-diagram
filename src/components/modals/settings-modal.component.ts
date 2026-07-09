@@ -207,7 +207,8 @@ export class SettingsModalComponent {
   }
   
   isThinkingSupported(): boolean {
-      return this.config.model.includes('gemini-2.5-flash');
+      const m = this.config.model.toLowerCase();
+      return m.includes('thinking') || m.includes('2.5') || m.includes('2.0-flash');
   }
 
   save() {

@@ -224,7 +224,10 @@ export class AiCopilotComponent {
         if (this.store.aiModalMode() === 'generate') {
             if (this.activeTab() === 'text') {
                 prompt = this.describeTab()?.value || '';
-            } 
+                if (!prompt.trim()) {
+                  throw new Error('Please describe the diagram you want to generate.');
+                }
+            }
             else if (this.activeTab() === 'url') {
                 const instructions = this.urlTab()?.instructions || '';
                 const url = this.urlTab()?.url;
@@ -233,14 +236,14 @@ export class AiCopilotComponent {
                     file = this.selectedFile();
                 }
                 if (!file) { throw new Error('No URL content fetched.'); }
-                prompt = `Analyze the content from ${file.name}.\nInstructions: ${instructions}`;
+                prompt = `Analyze the content from ${file.name}.\nInstructions: ${instructions || 'Generate a Mermaid diagram that captures the main structure and relationships.'}`;
             }
             else if (this.activeTab() === 'file') {
                 const instructions = this.fileTab()?.instructions || '';
                 if (!file) { throw new Error('No file selected.'); }
-                prompt = `Analyze the attached file (${file.name}).\nInstructions: ${instructions}`;
+                prompt = `Analyze the attached file (${file.name}).\nInstructions: ${instructions || 'Generate a Mermaid diagram that captures the main structure and relationships.'}`;
             }
-        } 
+        }
         else {
              prompt = this.describeTab()?.value || '';
              if (!prompt.trim()) { throw new Error('Please enter update instructions.'); }
@@ -273,17 +276,18 @@ export class AiCopilotComponent {
           apiVersion: aiConfig.apiVersion
         });
 
-        // 4. Set proposal code in the store to trigger visual diff
-        this.store.proposedCode.set(code);
-        
+        // 4. Set proposal + switch mobile tab to editor so the user sees the diff
+        this.store.setProposal(code);
+
         // Clean up inputs on success
         this.removeFile();
         this.describeTab()?.clear();
         this.urlTab()?.clear();
         this.fileTab()?.clear();
-        
-    } catch (e: any) {
-        this.error.set(e.message || 'Generation failed.');
+
+    } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : 'Generation failed.';
+        this.error.set(message);
     } finally {
         this.isAiLoading.set(false);
     }
