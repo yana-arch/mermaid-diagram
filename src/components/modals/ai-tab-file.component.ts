@@ -1,6 +1,13 @@
 
-import { Component, input, output, viewChild, ElementRef, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, output, viewChild, ElementRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+
+export interface SelectedSourceFile {
+  name: string;
+  type: string;
+  content: string;
+  isBase64: boolean;
+}
 
 @Component({
   selector: 'app-ai-tab-file',
@@ -49,7 +56,7 @@ import { CommonModule } from '@angular/common';
   `
 })
 export class AiTabFileComponent {
-  selectedFile = input<any>();
+  selectedFile = input<SelectedSourceFile | null>(null);
   onFileSelect = output<Event>();
   onRemoveFile = output<void>();
 

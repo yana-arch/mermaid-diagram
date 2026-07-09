@@ -110,6 +110,7 @@ import { MermaidService } from '../services/diagram/mermaid.service';
           (mousemove)="onMouseMove($event)"
           (mouseup)="onMouseUp()"
           (mouseleave)="onMouseLeave()"
+          (wheel)="onWheel($event)"
           (touchstart)="onTouchStart($event)"
           (touchmove)="onTouchMove($event)"
           (touchend)="onTouchEnd()"
@@ -329,7 +330,16 @@ export class ChartPreviewComponent {
   zoomIn() { this.zoomScale.update(s => Math.min(s * 1.2, 5)); }
   zoomOut() { this.zoomScale.update(s => Math.max(s / 1.2, 0.2)); }
   resetZoom() { this.zoomScale.set(1); this.panOffset.set({ x: 0, y: 0 }); }
-  
+
+  onWheel(e: WheelEvent) {
+    e.preventDefault();
+    if (e.deltaY < 0) {
+      this.zoomIn();
+    } else if (e.deltaY > 0) {
+      this.zoomOut();
+    }
+  }
+
   onMouseDown(e: MouseEvent) {
     if (e.button !== 0) return;
     e.preventDefault();

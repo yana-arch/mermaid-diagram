@@ -15,6 +15,8 @@ import {
 } from "@angular/core";
 import { isPlatformBrowser, CommonModule } from "@angular/common";
 import Prism from "prismjs";
+// Register Mermaid grammar for syntax highlighting
+import "prismjs/components/prism-mermaid";
 import { AppStateService } from "../services/core/app-state.service";
 import { DiffViewerComponent } from "./diff-viewer.component";
 
@@ -284,15 +286,11 @@ export class CodeEditorComponent {
   }
 
   acceptProposal() {
-    const proposal = this.store.proposedCode();
-    if (proposal !== null) {
-      this.codeChange.emit(proposal);
-      this.store.proposedCode.set(null);
-    }
+    this.store.acceptProposal();
   }
 
   discardProposal() {
-    this.store.proposedCode.set(null);
+    this.store.discardProposal();
   }
 }
 

@@ -130,13 +130,38 @@ describe('AppStateService', () => {
     expect(service.aiConfig().model).toBe(DEFAULT_AI_CONFIG.model); // Preserved
   });
 
-  it('should close all modals and clear proposed code', () => {
+  it('should close all modals without clearing proposed code', () => {
     service.proposedCode.set('some proposal');
     service.openAiModal('generate');
 
     service.closeAllModals();
     expect(modalService.isAnyModalOpen()).toBe(false);
+    // Proposal must survive panel close so user can still Accept/Discard
+    expect(service.proposedCode()).toBe('some proposal');
+  });
+
+  it('should accept and discard AI proposals', () => {
+    service.setCode('old');
+    service.setProposal('flowchart TD\nA-->B');
+    expect(service.proposedCode()).toBe('flowchart TD\nA-->B');
+    expect(service.mobileTab()).toBe('editor');
+
+    service.acceptProposal();
+    expect(service.mermaidCode()).toBe('flowchart TD\nA-->B');
     expect(service.proposedCode()).toBeNull();
+
+    service.setProposal('discard-me');
+    service.discardProposal();
+    expect(service.proposedCode()).toBeNull();
+  });
+
+  it('should cap history at MAX_HISTORY_ITEMS', async () => {
+    const { MAX_HISTORY_ITEMS } = await import('./app-state.service');
+    service.setCode('code');
+    for (let i = 0; i < MAX_HISTORY_ITEMS + 5; i++) {
+      service.addToHistory(`Item ${i}`);
+    }
+    expect(service.history().length).toBe(MAX_HISTORY_ITEMS);
   });
 
   it('should set mobile tab', () => {

@@ -102,17 +102,18 @@ export class MermaidService {
       const config = this.getThemeConfig(theme);
 
       mermaid.initialize({
-        theme: config.baseTheme as any,
+        // Mermaid theme names are a closed set; custom themes map to baseTheme already
+        theme: config.baseTheme as 'default' | 'base' | 'dark' | 'forest' | 'neutral' | 'null',
         themeVariables: config.variables,
         suppressErrorRendering: true,
       });
 
       const graphId = `mermaid-graph-${this.generateId()}`;
 
-      // render(id, text) returns { svg, bindFunctions } in Mermaid v10
+      // render(id, text) returns { svg, bindFunctions } in Mermaid v10+
       const { svg } = await mermaid.render(graphId, code);
       return svg;
-    } catch (e: any) {
+    } catch (e: unknown) {
       // Extract error message safely to handle complex error objects from Mermaid
       let errorMessage = "Mermaid syntax error";
 
@@ -121,8 +122,8 @@ export class MermaidService {
       } else if (e instanceof Error) {
         errorMessage = e.message;
       } else if (e && typeof e === "object") {
-        // Handle Mermaid's custom error objects which might contain 'str' or 'message'
-        errorMessage = e.str || e.message || "Unknown syntax error";
+        const errObj = e as { str?: string; message?: string };
+        errorMessage = errObj.str || errObj.message || "Unknown syntax error";
       }
 
       console.error("Mermaid render failed:", errorMessage);

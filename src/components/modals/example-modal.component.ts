@@ -1,6 +1,7 @@
 
-import { Component, input, output, computed, signal, effect, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, output, computed, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChartExample } from '../../data/chart-examples';
 
 @Component({
   selector: 'app-example-modal',
@@ -136,7 +137,7 @@ import { CommonModule } from '@angular/common';
 })
 export class ExampleModalComponent {
   isOpen = input.required<boolean>();
-  examples = input.required<any[]>();
+  examples = input.required<ChartExample[]>();
   close = output<void>();
   select = output<string>();
 
@@ -153,7 +154,7 @@ export class ExampleModalComponent {
   displayedItems = computed(() => {
     const term = this.searchTerm().toLowerCase().trim();
     const cat = this.selectedCategory();
-    
+
     return this.examples().filter(ex => {
        const matchSearch = !term || ex.name.toLowerCase().includes(term) || ex.category.toLowerCase().includes(term);
        const matchCat = cat === 'All' || ex.category === cat;
@@ -164,8 +165,8 @@ export class ExampleModalComponent {
   // Group items specifically for the 'All' view
   groupedDisplayedItems = computed(() => {
     const raw = this.displayedItems();
-    const map = new Map<string, any[]>();
-    
+    const map = new Map<string, ChartExample[]>();
+
     raw.forEach(ex => {
       const cat = ex.category || 'Other';
       if (!map.has(cat)) map.set(cat, []);

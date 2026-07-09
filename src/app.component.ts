@@ -50,9 +50,21 @@ export class AppComponent {
 
   @HostListener('window:keydown.escape')
   onEscape() {
-    this.store.closeAllModals();
-    this.editorExpanded.set(false);
-    this.previewExpanded.set(false);
+    // Priority: close modal → exit focus mode → discard AI proposal
+    if (this.store.isAiModalOpen() || this.store.isSettingsModalOpen() ||
+        this.store.isHistoryModalOpen() || this.store.isExampleModalOpen() ||
+        this.store.isExportModalOpen()) {
+      this.store.closeAllModals();
+      return;
+    }
+    if (this.editorExpanded() || this.previewExpanded()) {
+      this.editorExpanded.set(false);
+      this.previewExpanded.set(false);
+      return;
+    }
+    if (this.store.proposedCode()) {
+      this.store.discardProposal();
+    }
   }
 
   toggleEditorExpand() {
@@ -91,17 +103,20 @@ export class AppComponent {
     this.store.setMobileTab('preview');
   }
 
-  handleExport(event: {format: ExportFormat, scale: number}) {
+  async handleExport(event: {format: ExportFormat, scale: number}) {
     this.store.closeAllModals();
     const svgEl = this.previewComponent()?.getSvgElement();
-    if (!svgEl) return;
-
-    if (event.format === 'svg') {
-      const xml = new XMLSerializer().serializeToString(svgEl);
-      this.exportService.downloadFile('chart.svg', xml, 'image/svg+xml');
+    if (!svgEl) {
+      this.store.showStatus('Nothing to export — fix syntax errors first');
       return;
     }
 
-    this.exportService.renderRaster(svgEl, event.format, event.scale);
+    try {
+      await this.exportService.renderRaster(svgEl, event.format, event.scale);
+      this.store.showStatus(`Downloaded chart.${event.format}`);
+    } catch (err) {
+      console.error('Export failed', err);
+      this.store.showStatus('Export failed');
+    }
   }
 }
