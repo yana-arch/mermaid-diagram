@@ -1,0 +1,70 @@
+name: Test
+
+# Quality-gate workflow (separate from the Build and Release pipeline in ci.yml).
+# Runs the automated test suites for both the Angular app and the render server.
+on:
+  push:
+    branches: ["main", "feature/**", "refactor/**"]
+  pull_request:
+    branches: ["main", "feature/**", "refactor/**"]
+
+# Cancel superseded runs on the same ref to save CI minutes.
+concurrency:
+  group: test-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  angular:
+    name: Angular app (vitest + build)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests (vitest)
+        run: npx vitest run
+
+      - name: Build
+        run: npm run build
+
+  server:
+    name: Render API (node:test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: server/package-lock.json
+
+      # Puppeteer downloads Chromium during install (needed for the render smoke
+      # tests). Cache it so subsequent runs are fast.
+      - name: Cache Puppeteer Chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/puppeteer
+          key: ${{ runner.os }}-puppeteer-${{ hashFiles('server/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-puppeteer-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test (node:test + real Chromium render smoke)
+        run: npm test
