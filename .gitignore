@@ -693,3 +693,6 @@ fabric.properties
 scratch/
 memory/
 .serena/
+graphify-out
+.claude/
+.planning/
