@@ -90,13 +90,7 @@ import { HistoryItem } from '../../services/core/app-state.service';
         </div>
       </div>
     }
-  `,
-  styles: [`
-    .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
-  `]
+  `
 })
 export class HistoryModalComponent {
   isOpen = input.required<boolean>();

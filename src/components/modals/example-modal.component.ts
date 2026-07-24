@@ -127,13 +127,7 @@ import { ChartExample } from '../../data/chart-examples';
         </div>
       </button>
     </ng-template>
-  `,
-  styles: [`
-    .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
-  `]
+  `
 })
 export class ExampleModalComponent {
   isOpen = input.required<boolean>();

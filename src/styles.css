@@ -20,3 +20,22 @@ app-root {
   height: 100%;
   min-height: 100%;
 }
+
+/* Shared custom scrollbar. Defined globally so every component using the
+   .custom-scrollbar class (modals, panels, diff viewer) gets a consistent
+   look — previously this was duplicated in a couple of modals as scoped
+   styles, which meant other consumers silently fell back to the default. */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
