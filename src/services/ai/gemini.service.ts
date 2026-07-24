@@ -7,6 +7,7 @@ import {
   AiRequestConfig,
   AiModelInfo,
 } from './ai-provider.interface';
+import { modelSupportsThinking } from './model-capabilities';
 
 // Re-export provider types so existing imports keep working
 export type { AiInputData, AiRequestConfig, AiModelInfo } from './ai-provider.interface';
@@ -79,12 +80,7 @@ export class GeminiService implements IAiProvider {
     };
 
     // Thinking config for models that support it (2.5 family, *thinking* variants)
-    const modelLower = (config.model || '').toLowerCase();
-    const supportsThinking =
-      modelLower.includes('thinking') ||
-      modelLower.includes('2.5') ||
-      modelLower.includes('2.0-flash');
-    if (supportsThinking && config.thinkingBudget && config.thinkingBudget > 0) {
+    if (modelSupportsThinking(config.model) && config.thinkingBudget && config.thinkingBudget > 0) {
       generationConfig.thinkingConfig = { thinkingBudget: config.thinkingBudget };
     }
 

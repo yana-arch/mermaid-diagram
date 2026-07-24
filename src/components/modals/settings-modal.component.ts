@@ -3,6 +3,7 @@ import { Component, input, output, inject, signal, effect, ChangeDetectorRef, Ch
 import { CommonModule } from '@angular/common';
 import { AppStateService, AiConfig } from '../../services/core/app-state.service';
 import { GeminiService, AiModelInfo } from '../../services/ai/gemini.service';
+import { modelSupportsThinking } from '../../services/ai/model-capabilities';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -207,8 +208,7 @@ export class SettingsModalComponent {
   }
   
   isThinkingSupported(): boolean {
-      const m = this.config.model.toLowerCase();
-      return m.includes('thinking') || m.includes('2.5') || m.includes('2.0-flash');
+      return modelSupportsThinking(this.config.model);
   }
 
   save() {
