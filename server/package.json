@@ -1,0 +1,25 @@
+{
+  "name": "mermaid-render-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Server-side Mermaid rendering API — POST mermaid code, get an image back.",
+  "main": "src/index.mjs",
+  "scripts": {
+    "start": "node src/index.mjs",
+    "dev": "node --watch src/index.mjs",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "mermaid": "^11.12.3",
+    "puppeteer": "^24.10.0"
+  },
+  "optionalDependencies": {
+    "@sparticuz/chromium": "^131.0.0",
+    "puppeteer-core": "^24.10.0"
+  }
+}
