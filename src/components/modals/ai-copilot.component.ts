@@ -1,7 +1,7 @@
-import { Component, ElementRef, inject, signal, viewChild, effect, ChangeDetectionStrategy, ViewEncapsulation } from '@angular/core';
+import { Component, inject, signal, viewChild, effect, ChangeDetectionStrategy, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GeminiService, AiInputData } from '../../services/ai/gemini.service';
-import { AiMode, AppStateService, MobileTab } from '../../services/core/app-state.service';
+import { AiMode, AppStateService } from '../../services/core/app-state.service';
 import { AiTabDescribeComponent } from './ai-tab-describe.component';
 import { AiTabUrlComponent } from './ai-tab-url.component';
 import { AiTabFileComponent } from './ai-tab-file.component';

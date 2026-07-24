@@ -1,5 +1,5 @@
 
-import { Component, input, output, computed, signal, effect, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, output, computed, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { HistoryItem } from '../../services/core/app-state.service';
 import { IconComponent } from '../../shared/icon.component';

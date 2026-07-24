@@ -1,5 +1,5 @@
 
-import { Component, input, output, viewChild, ElementRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, viewChild, ElementRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
