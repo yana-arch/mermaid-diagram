@@ -2,6 +2,7 @@ import { Component, ElementRef, ViewEncapsulation, input, output, viewChild, sig
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { MermaidService } from '../services/diagram/mermaid.service';
 import { createCopyFeedback } from '../shared/copy-feedback';
+import { createPanZoomController, PAN_ZOOM } from '../shared/pan-zoom-controller';
 
 @Component({
   selector: 'app-chart-preview',
@@ -61,7 +62,7 @@ import { createCopyFeedback } from '../shared/copy-feedback';
         
         <!-- Zoom Level HUD Indicator -->
         <div class="absolute top-4 left-4 z-20 pointer-events-none bg-slate-900/60 backdrop-blur px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-mono text-slate-300 border border-slate-700/50">
-          Zoom: {{ zoomPercentage() }}%
+          Zoom: {{ pz.zoomPercentage() }}%
         </div>
 
         <!-- Controls Container -->
@@ -83,7 +84,7 @@ import { createCopyFeedback } from '../shared/copy-feedback';
           <!-- Zoom & Fit Controls -->
           <div class="flex flex-col gap-1 backdrop-blur-sm p-1.5 rounded-lg border shadow-xl transition-colors"
                [class]="controlsClass()">
-            <button (click)="zoomIn()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
+            <button (click)="pz.zoomIn()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
                      [class]="buttonClass()" title="Zoom In" aria-label="Zoom In">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
             </button>
@@ -95,7 +96,7 @@ import { createCopyFeedback } from '../shared/copy-feedback';
                      [class]="buttonClass()" title="Reset Zoom (100%)" aria-label="Reset Zoom">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
             </button>
-            <button (click)="zoomOut()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
+            <button (click)="pz.zoomOut()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
                      [class]="buttonClass()" title="Zoom Out" aria-label="Zoom Out">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
             </button>
@@ -105,22 +106,22 @@ import { createCopyFeedback } from '../shared/copy-feedback';
         <!-- Pannable Container -->
         <div 
           class="w-full h-full flex items-center justify-center transition-transform duration-75 origin-top-left"
-          [class.cursor-grab]="!isPanning()"
-          [class.cursor-grabbing]="isPanning()"
-          (mousedown)="onMouseDown($event)"
-          (mousemove)="onMouseMove($event)"
-          (mouseup)="onMouseUp()"
-          (mouseleave)="onMouseLeave()"
-          (wheel)="onWheel($event)"
-          (touchstart)="onTouchStart($event)"
-          (touchmove)="onTouchMove($event)"
-          (touchend)="onTouchEnd()"
-          (touchcancel)="onTouchEnd()"
+          [class.cursor-grab]="!pz.isPanning()"
+          [class.cursor-grabbing]="pz.isPanning()"
+          (mousedown)="pz.onMouseDown($event)"
+          (mousemove)="pz.onMouseMove($event)"
+          (mouseup)="pz.onMouseUp()"
+          (mouseleave)="pz.onMouseLeave()"
+          (wheel)="pz.onWheel($event)"
+          (touchstart)="pz.onTouchStart($event)"
+          (touchmove)="pz.onTouchMove($event)"
+          (touchend)="pz.onTouchEnd()"
+          (touchcancel)="pz.onTouchEnd()"
         >
             <div 
               #chartOutput 
               class="origin-center transition-transform duration-75 pointer-events-none"
-              [style.transform]="'translate(' + panOffset().x + 'px, ' + panOffset().y + 'px) scale(' + zoomScale() + ')'"
+              [style.transform]="'translate(' + pz.panOffset().x + 'px, ' + pz.panOffset().y + 'px) scale(' + pz.zoomScale() + ')'"
             ></div>
         </div>
       </div>
@@ -188,19 +189,9 @@ export class ChartPreviewComponent {
     return 'text-slate-600 hover:text-indigo-600 hover:bg-slate-100';
   });
 
-  // HUD zoom indicator
-  zoomPercentage = computed(() => {
-    return Math.round(this.zoomScale() * 100);
-  });
+  // Pan & Zoom state + interaction handlers (headless controller).
+  readonly pz = createPanZoomController();
 
-  // Pan & Zoom
-  zoomScale = signal(1);
-  panOffset = signal({ x: 0, y: 0 });
-  isPanning = signal(false);
-  private dragStart = { x: 0, y: 0 };
-  private initialPan = { x: 0, y: 0 };
-  private initialDistance = 0;
-  private initialZoom = 1;
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private autoFitTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -305,82 +296,15 @@ export class ChartPreviewComponent {
 
     const scaleX = usableWidth / svgWidth;
     const scaleY = usableHeight / svgHeight;
-    const scale = Math.min(scaleX, scaleY, 2.0); // Maximum 2.0x scaling to prevent blurriness
+    // Cap upscaling to keep small diagrams crisp.
+    const scale = Math.min(scaleX, scaleY, PAN_ZOOM.AUTOFIT_MAX_SCALE);
 
-    this.panOffset.set({ x: 0, y: 0 });
-    this.zoomScale.set(scale);
+    this.pz.setView({ x: 0, y: 0 }, scale);
   }
 
-  // Pan Zoom Logic
-  zoomIn() { this.zoomScale.update(s => Math.min(s * 1.2, 5)); }
-  zoomOut() { this.zoomScale.update(s => Math.max(s / 1.2, 0.2)); }
-  resetZoom() { this.zoomScale.set(1); this.panOffset.set({ x: 0, y: 0 }); }
-
-  onWheel(e: WheelEvent) {
-    e.preventDefault();
-    if (e.deltaY < 0) {
-      this.zoomIn();
-    } else if (e.deltaY > 0) {
-      this.zoomOut();
-    }
-  }
-
-  onMouseDown(e: MouseEvent) {
-    if (e.button !== 0) return;
-    e.preventDefault();
-    this.isPanning.set(true);
-    this.dragStart = { x: e.clientX, y: e.clientY };
-    this.initialPan = { ...this.panOffset() };
-  }
-  onMouseMove(e: MouseEvent) {
-    if (!this.isPanning()) return;
-    e.preventDefault();
-    this.panOffset.set({
-      x: this.initialPan.x + (e.clientX - this.dragStart.x),
-      y: this.initialPan.y + (e.clientY - this.dragStart.y)
-    });
-  }
-  onMouseUp() { this.isPanning.set(false); }
-  onMouseLeave() { this.isPanning.set(false); }
-
-  // Touch Support
-  onTouchStart(e: TouchEvent) {
-    if (e.touches.length === 1) {
-      this.isPanning.set(true);
-      this.dragStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      this.initialPan = { ...this.panOffset() };
-    } else if (e.touches.length === 2) {
-      this.isPanning.set(false);
-      this.initialDistance = this.getDistance(e.touches);
-      this.initialZoom = this.zoomScale();
-    }
-  }
-
-  onTouchMove(e: TouchEvent) {
-    if (e.touches.length === 1 && this.isPanning()) {
-      e.preventDefault();
-      this.panOffset.set({
-        x: this.initialPan.x + (e.touches[0].clientX - this.dragStart.x),
-        y: this.initialPan.y + (e.touches[0].clientY - this.dragStart.y)
-      });
-    } else if (e.touches.length === 2) {
-      e.preventDefault();
-      const currentDistance = this.getDistance(e.touches);
-      if (this.initialDistance > 0) {
-        const scale = currentDistance / this.initialDistance;
-        this.zoomScale.set(Math.min(Math.max(this.initialZoom * scale, 0.2), 5));
-      }
-    }
-  }
-
-  private getDistance(touches: TouchList): number {
-    const dx = touches[0].clientX - touches[1].clientX;
-    const dy = touches[0].clientY - touches[1].clientY;
-    return Math.sqrt(dx * dx + dy * dy);
-  }
-
-  onTouchEnd() {
-    this.isPanning.set(false);
+  /** Reset pan/zoom to 1:1. Kept as a component method for the parent's ViewChild API. */
+  resetZoom() {
+    this.pz.resetZoom();
   }
 
   private parseMermaidError(error: unknown): string {
