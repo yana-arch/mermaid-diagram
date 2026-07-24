@@ -89,6 +89,14 @@ describe('AppStateService', () => {
     expect(service.isExportModalOpen()).toBe(true);
   });
 
+  it('should reflect isAnyModalOpen across open/close', () => {
+    expect(service.isAnyModalOpen()).toBe(false);
+    service.openSettingsModal();
+    expect(service.isAnyModalOpen()).toBe(true);
+    service.closeAllModals();
+    expect(service.isAnyModalOpen()).toBe(false);
+  });
+
   it('should add to history with unique ID and timestamp', () => {
     const code = 'flowchart LR\nStart-->Stop';
     service.setCode(code);

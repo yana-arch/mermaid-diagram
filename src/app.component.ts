@@ -51,9 +51,7 @@ export class AppComponent {
   @HostListener('window:keydown.escape')
   onEscape() {
     // Priority: close modal → exit focus mode → discard AI proposal
-    if (this.store.isAiModalOpen() || this.store.isSettingsModalOpen() ||
-        this.store.isHistoryModalOpen() || this.store.isExampleModalOpen() ||
-        this.store.isExportModalOpen()) {
+    if (this.store.isAnyModalOpen()) {
       this.store.closeAllModals();
       return;
     }

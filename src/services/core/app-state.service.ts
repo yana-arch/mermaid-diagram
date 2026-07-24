@@ -65,6 +65,9 @@ export class AppStateService {
   readonly isAiModalOpen = this.modalService.isAiOpen;
   readonly aiModalMode = signal<AiMode>('generate');
 
+  /** True when any modal/panel is currently open. */
+  readonly isAnyModalOpen = this.modalService.isAnyModalOpen;
+
   readonly isExampleModalOpen = this.modalService.isExampleOpen;
   readonly isExportModalOpen = this.modalService.isExportOpen;
   readonly isSettingsModalOpen = this.modalService.isSettingsOpen;
