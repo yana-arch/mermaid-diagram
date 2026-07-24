@@ -1,6 +1,7 @@
 import { Component, ElementRef, ViewEncapsulation, input, output, viewChild, signal, effect, inject, PLATFORM_ID, computed, ChangeDetectionStrategy, DestroyRef, HostListener } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { MermaidService } from '../services/diagram/mermaid.service';
+import { createCopyFeedback } from '../shared/copy-feedback';
 
 @Component({
   selector: 'app-chart-preview',
@@ -70,9 +71,9 @@ import { MermaidService } from '../services/diagram/mermaid.service';
                [class]="controlsClass()">
              <button (click)="copySvg()" class="p-2 sm:p-1.5 rounded transition flex justify-center items-center"
                      [class]="buttonClass()" 
-                     [title]="copyText()"
-                     [attr.aria-label]="copyText()">
-               @if(isCopied()) {
+                     [title]="copyFeedback.label()"
+                     [attr.aria-label]="copyFeedback.label()">
+               @if(copyFeedback.copied()) {
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-emerald-400"><polyline points="20 6 9 17 4 12"></polyline></svg>
                } @else {
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" sm:width="16" sm:height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
@@ -144,8 +145,7 @@ export class ChartPreviewComponent {
   chartOutput = viewChild.required<ElementRef<HTMLDivElement>>('chartOutput');
   
   error = signal<string | null>(null);
-  isCopied = signal(false);
-  copyText = signal('Copy SVG Code');
+  readonly copyFeedback = createCopyFeedback({ idleLabel: 'Copy SVG Code' });
   isRendering = signal(false);
 
   private readonly THEME_CONTAINER_CLASSES: Record<string, string> = {
@@ -203,7 +203,6 @@ export class ChartPreviewComponent {
   private initialZoom = 1;
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private autoFitTimer: ReturnType<typeof setTimeout> | null = null;
-  private copyTimer: ReturnType<typeof setTimeout> | null = null;
 
   private mermaidService = inject(MermaidService);
   private platformId = inject(PLATFORM_ID);
@@ -213,7 +212,6 @@ export class ChartPreviewComponent {
     this.destroyRef.onDestroy(() => {
       if (this.debounceTimer) clearTimeout(this.debounceTimer);
       if (this.autoFitTimer) clearTimeout(this.autoFitTimer);
-      if (this.copyTimer) clearTimeout(this.copyTimer);
     });
 
     // Auto-fit when expanded state changes (after transition)
@@ -283,21 +281,8 @@ export class ChartPreviewComponent {
   async copySvg() {
     const svgEl = this.getSvgElement();
     if (!svgEl || !isPlatformBrowser(this.platformId)) return;
-
-    try {
-      const svgData = new XMLSerializer().serializeToString(svgEl);
-      await navigator.clipboard.writeText(svgData);
-      this.isCopied.set(true);
-      this.copyText.set('Copied!');
-
-      if (this.copyTimer) clearTimeout(this.copyTimer);
-      this.copyTimer = setTimeout(() => {
-        this.isCopied.set(false);
-        this.copyText.set('Copy SVG Code');
-      }, 2000);
-    } catch (err) {
-      console.error('Failed to copy SVG', err);
-    }
+    const svgData = new XMLSerializer().serializeToString(svgEl);
+    await this.copyFeedback.copy(svgData);
   }
 
   // Auto Fit Logic

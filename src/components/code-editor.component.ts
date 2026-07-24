@@ -8,10 +8,8 @@ import {
   effect,
   inject,
   PLATFORM_ID,
-  signal,
   ChangeDetectionStrategy,
   computed,
-  DestroyRef,
 } from "@angular/core";
 import { isPlatformBrowser, CommonModule } from "@angular/common";
 import Prism from "prismjs";
@@ -19,6 +17,7 @@ import Prism from "prismjs";
 import "prismjs/components/prism-mermaid";
 import { AppStateService } from "../services/core/app-state.service";
 import { DiffViewerComponent } from "./diff-viewer.component";
+import { createCopyFeedback } from "../shared/copy-feedback";
 
 @Component({
   selector: "app-code-editor",
@@ -41,10 +40,10 @@ import { DiffViewerComponent } from "./diff-viewer.component";
           <button
             (click)="copyCode()"
             class="text-xs app-text-muted hover:text-[var(--text-main)] transition-colors flex items-center justify-center p-1 rounded hover:bg-[var(--bg-secondary)]"
-            [title]="copyText()"
-            [attr.aria-label]="copyText()"
+            [title]="copyFeedback.label()"
+            [attr.aria-label]="copyFeedback.label()"
           >
-            @if (isCopied()) {
+            @if (copyFeedback.copied()) {
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="14"
@@ -216,8 +215,7 @@ export class CodeEditorComponent {
   codeEl = viewChild.required<ElementRef<HTMLElement>>("codeEl");
   gutter = viewChild<ElementRef<HTMLDivElement>>("gutter");
 
-  isCopied = signal(false);
-  copyText = signal("Copy code");
+  readonly copyFeedback = createCopyFeedback({ idleLabel: "Copy code" });
 
   lines = computed(() => {
     return this.code().split("\n");
@@ -226,16 +224,8 @@ export class CodeEditorComponent {
   store = inject(AppStateService);
 
   private platformId = inject(PLATFORM_ID);
-  private destroyRef = inject(DestroyRef);
-  private copyTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
-    this.destroyRef.onDestroy(() => {
-      if (this.copyTimeout) {
-        clearTimeout(this.copyTimeout);
-      }
-    });
-
     effect(() => {
       const c = this.code();
       const el = this.codeEl().nativeElement;
@@ -266,23 +256,7 @@ export class CodeEditorComponent {
 
   async copyCode() {
     if (!isPlatformBrowser(this.platformId)) return;
-    try {
-      await navigator.clipboard.writeText(this.code());
-      this.isCopied.set(true);
-      this.copyText.set("Copied!");
-      
-      if (this.copyTimeout) {
-        clearTimeout(this.copyTimeout);
-      }
-      
-      this.copyTimeout = setTimeout(() => {
-        this.isCopied.set(false);
-        this.copyText.set("Copy code");
-        this.copyTimeout = null;
-      }, 2000);
-    } catch (err) {
-      console.error("Failed to copy", err);
-    }
+    await this.copyFeedback.copy(this.code());
   }
 
   acceptProposal() {
