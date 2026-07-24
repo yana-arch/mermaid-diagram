@@ -4,12 +4,13 @@ import { CommonModule } from '@angular/common';
 import { AppStateService, AiConfig } from '../../services/core/app-state.service';
 import { GeminiService, AiModelInfo } from '../../services/ai/gemini.service';
 import { modelSupportsThinking } from '../../services/ai/model-capabilities';
+import { IconComponent } from '../../shared/icon.component';
 import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-settings-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (isOpen()) {
@@ -26,7 +27,7 @@ import { FormsModule } from '@angular/forms';
           </h3>
           <button (click)="close.emit()" class="text-slate-400 hover:text-white transition-colors p-1 rounded hover:bg-slate-700"
             aria-label="Close settings" title="Close">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <app-icon name="close" [size]="20" />
           </button>
         </div>
 

@@ -1,6 +1,7 @@
 
 import { Component, input, output, viewChild, ElementRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../shared/icon.component';
 
 export interface SelectedSourceFile {
   name: string;
@@ -12,7 +13,7 @@ export interface SelectedSourceFile {
 @Component({
   selector: 'app-ai-tab-file',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="space-y-4">
@@ -38,8 +39,8 @@ export interface SelectedSourceFile {
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
               </div>
               <span class="text-white truncate flex-1 text-left text-sm font-medium">{{ selectedFile()?.name }}</span>
-              <button (click)="onRemoveFile.emit()" class="text-slate-400 hover:text-red-400 p-1 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              <button (click)="onRemoveFile.emit()" class="text-slate-400 hover:text-red-400 p-1 transition-colors" aria-label="Remove file" title="Remove file">
+                <app-icon name="close" [size]="18" />
               </button>
             </div>
           }

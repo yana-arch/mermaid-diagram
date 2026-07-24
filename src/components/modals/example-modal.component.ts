@@ -2,11 +2,12 @@
 import { Component, input, output, computed, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ChartExample } from '../../data/chart-examples';
+import { IconComponent } from '../../shared/icon.component';
 
 @Component({
   selector: 'app-example-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (isOpen()) {
@@ -22,8 +23,8 @@ import { ChartExample } from '../../data/chart-examples';
             <h3 class="text-lg sm:text-xl font-bold text-white">Example Gallery</h3>
             <p class="text-xs sm:text-sm text-slate-400">Select a template</p>
           </div>
-          <button (click)="close.emit()" class="text-slate-400 hover:text-white transition-colors p-2 hover:bg-slate-700 rounded-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          <button (click)="close.emit()" class="text-slate-400 hover:text-white transition-colors p-2 hover:bg-slate-700 rounded-lg" aria-label="Close" title="Close">
+            <app-icon name="close" [size]="24" />
           </button>
         </div>
 

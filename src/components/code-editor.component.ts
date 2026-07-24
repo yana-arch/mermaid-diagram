@@ -18,13 +18,14 @@ import "prismjs/components/prism-mermaid";
 import { AppStateService } from "../services/core/app-state.service";
 import { DiffViewerComponent } from "./diff-viewer.component";
 import { createCopyFeedback } from "../shared/copy-feedback";
+import { IconComponent } from "../shared/icon.component";
 
 @Component({
   selector: "app-code-editor",
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  imports: [CommonModule, DiffViewerComponent],
+  imports: [CommonModule, DiffViewerComponent, IconComponent],
   host: {
     class: "flex flex-col h-full",
   },
@@ -99,7 +100,7 @@ import { createCopyFeedback } from "../shared/copy-feedback";
             Accept
           </button>
           <button (click)="discardProposal()" class="text-xs bg-slate-700 hover:bg-slate-650 font-medium px-3 py-1.5 rounded-md text-slate-200 transition-colors border border-slate-600/50 flex items-center gap-1">
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <app-icon name="close" [size]="12" />
             Discard
           </button>
         </div>

@@ -1,12 +1,14 @@
 
 import { Component, input, output, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ExportFormat } from '../../services/core/export.service';
+import { IconComponent } from '../../shared/icon.component';
 
 export type { ExportFormat };
 
 @Component({
   selector: 'app-export-modal',
   standalone: true,
+  imports: [IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (isOpen()) {
@@ -18,8 +20,8 @@ export type { ExportFormat };
         <!-- Header -->
         <div class="flex justify-between items-center px-4 pb-4 pt-2 md:pt-4 md:px-5 border-b border-slate-700 shrink-0">
           <h3 class="text-lg sm:text-xl font-bold text-white">Export Diagram</h3>
-          <button (click)="close.emit()" class="text-slate-400 hover:text-white transition-colors p-1 rounded hover:bg-slate-700">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          <button (click)="close.emit()" class="text-slate-400 hover:text-white transition-colors p-1 rounded hover:bg-slate-700" aria-label="Close" title="Close">
+            <app-icon name="close" [size]="20" />
           </button>
         </div>
 

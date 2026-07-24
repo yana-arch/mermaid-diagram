@@ -5,13 +5,14 @@ import { AiMode, AppStateService, MobileTab } from '../../services/core/app-stat
 import { AiTabDescribeComponent } from './ai-tab-describe.component';
 import { AiTabUrlComponent } from './ai-tab-url.component';
 import { AiTabFileComponent } from './ai-tab-file.component';
+import { IconComponent } from '../../shared/icon.component';
 
 export type AiTab = 'text' | 'url' | 'file';
 
 @Component({
   selector: 'app-ai-copilot',
   standalone: true,
-  imports: [CommonModule, AiTabDescribeComponent, AiTabUrlComponent, AiTabFileComponent],
+  imports: [CommonModule, AiTabDescribeComponent, AiTabUrlComponent, AiTabFileComponent, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   template: `
@@ -50,7 +51,7 @@ export type AiTab = 'text' | 'url' | 'file';
         <button (click)="closeCopilot()" [disabled]="isAiLoading()" 
           class="text-slate-400 hover:text-white transition-colors p-1.5 rounded hover:bg-slate-800 disabled:opacity-50"
           aria-label="Close panel" title="Close">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          <app-icon name="close" [size]="18" />
         </button>
       </div>
 
